@@ -13,11 +13,6 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
 
     }
 
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
-    }
-
     private void showInfo() {
         getLogger().info( "");
         getLogger().info("TNT optimizer activated successfully!");
