@@ -15,7 +15,7 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
 
     private void showInfo() {
         getLogger().info( "");
-        getLogger().info("NoMoreTNTChainCrash activated successfully!");
+        getLogger().info("TNT optimizer activated successfully!");
         getLogger().info( "");
         getLogger().warning("WARNING! This plugin removes all tnt's that");
         getLogger().warning("fell within the explosion radius of another tnt!");
