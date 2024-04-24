@@ -19,6 +19,7 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
         getLogger().info( "");
         getLogger().warning("WARNING! This plugin removes all tnt's that");
         getLogger().warning("fell within the explosion radius of another tnt!");
+        getLogger().info( "");
 
         String serverVersion = Bukkit.getVersion();
         if (!serverVersion.contains("1.20") || !serverVersion.contains("1.21")) {
