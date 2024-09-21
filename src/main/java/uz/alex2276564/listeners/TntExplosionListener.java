@@ -13,8 +13,13 @@ public class TntExplosionListener implements Listener {
 
     @EventHandler
     private void on(EntityExplodeEvent event) {
+
         //Check entity need because server crash if explosion caused by Ender Dragon
-        if (event.getEntity() instanceof TNTPrimed || event.getEntity() instanceof Creeper || event.getEntity() instanceof Wither || event.getEntity() instanceof EnderCrystal) {
+        if (event.getEntity() instanceof TNTPrimed ||
+                event.getEntity() instanceof Creeper ||
+                event.getEntity() instanceof Wither ||
+                event.getEntity() instanceof EnderCrystal) {
+
             //Remove TNT blocks from the explosion to prevent chain reactions and server crashes
             event.blockList().removeIf(block -> block.getType() == Material.TNT);
         }
