@@ -6,3 +6,4 @@ load: STARTUP
 softdepend: [UltimateTNT, ExplodeAny, Tnttag, TNTModifier]
 authors: [alex2276564]
 description: Fix tnt chain crash (https://www.youtube.com/watch?v=HEet0raMR4o)
+website: https://github.com/alex2276564/NoMoreTNTChainCrash
