@@ -24,7 +24,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: build
 
@@ -45,23 +45,3 @@ jobs:
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Auto-merge GitHub Actions updates
-        if: steps.metadata.outputs.package-ecosystem == 'github_actions'
-        run: gh pr merge --auto --squash "$PR_URL"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{github.event.pull_request.html_url}}
-
-      - name: Auto-merge other Dependabot PRs
-        if: |
-          steps.metadata.outputs.package-ecosystem != 'github_actions' &&
-          (
-            steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-            steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
-            steps.metadata.outputs.dependency-type == 'direct:development'
-          )
-        run: gh pr merge --auto --squash "$PR_URL"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{github.event.pull_request.html_url}}
