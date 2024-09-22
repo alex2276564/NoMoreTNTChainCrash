@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -36,13 +39,38 @@ jobs:
     if: ${{ github.actor == 'dependabot[bot]' }}
     needs: build
     steps:
+      - uses: actions/checkout@v3
+
       - name: Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Validate GitHub Actions
+        if: steps.metadata.outputs.package-ecosystem == 'github_actions'
+        run: |
+          for file in .github/workflows/*.yml
+          do
+            echo "Validating $file"
+            yq eval $file > /dev/null
+          done
+
+      - name: Update Gradle Wrapper
+        if: steps.metadata.outputs.package-ecosystem == 'gradle'
+        run: |
+          ./gradlew wrapper --gradle-version ${{ steps.metadata.outputs.new-version }}
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add gradle/wrapper/gradle-wrapper.properties
+          git commit -m "Update Gradle Wrapper to ${{ steps.metadata.outputs.new-version }}"
+          git push
+
       - name: Auto-merge Dependabot PRs
-        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-patch'}}
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
+          steps.metadata.outputs.dependency-type == 'direct:development'
         run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
