@@ -12,7 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+        dependabot/github_actions/actions/checkout-4
+      - uses: actions/checkout@v4
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -38,7 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
-      - uses: actions/checkout@v2
+        dependabot/github_actions/actions/checkout-4
+      - uses: actions/checkout@v4
 
       - name: Dependabot metadata
         id: metadata
