@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -29,7 +29,7 @@ jobs:
           arguments: build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: NoMoreTNTChainCrash
           path: ${{ github.workspace }}/build/libs/
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: Dependabot metadata
         id: metadata
