@@ -12,25 +12,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-        dependabot/github_actions/actions/checkout-4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Set up JDK 16
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           java-version: 16
           distribution: 'temurin'
 
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: NoMoreTNTChainCrash
           path: ${{ github.workspace }}/build/libs/
@@ -39,12 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
-        dependabot/github_actions/actions/checkout-4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
       - name: Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
