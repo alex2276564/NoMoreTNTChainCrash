@@ -12,13 +12,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+        dependabot/github_actions/actions/checkout-4
       - uses: actions/checkout@v4
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Set up JDK 16
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 16
           distribution: 'temurin'
@@ -29,7 +30,7 @@ jobs:
           arguments: build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NoMoreTNTChainCrash
           path: ${{ github.workspace }}/build/libs/
@@ -37,8 +38,8 @@ jobs:
   dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
-    needs: build
     steps:
+        dependabot/github_actions/actions/checkout-4
       - uses: actions/checkout@v4
 
       - name: Dependabot metadata
@@ -47,31 +48,22 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Validate GitHub Actions
+      - name: Auto-merge GitHub Actions updates
         if: steps.metadata.outputs.package-ecosystem == 'github_actions'
-        run: |
-          for file in .github/workflows/*.yml
-          do
-            echo "Validating $file"
-            yq eval $file > /dev/null
-          done
-
-      - name: Update Gradle Wrapper
-        if: steps.metadata.outputs.package-ecosystem == 'gradle'
-        run: |
-          ./gradlew wrapper --gradle-version ${{ steps.metadata.outputs.new-version }}
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add gradle/wrapper/gradle-wrapper.properties
-          git commit -m "Update Gradle Wrapper to ${{ steps.metadata.outputs.new-version }}"
-          git push
-
-      - name: Auto-merge Dependabot PRs
-        if: |
-          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
-          steps.metadata.outputs.dependency-type == 'direct:development'
-        run: gh pr merge --auto --merge "$PR_URL"
+        run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.PAT_TOKEN}}
+
+      - name: Auto-merge other Dependabot PRs
+        if: |
+          steps.metadata.outputs.package-ecosystem != 'github_actions' &&
+          (
+            steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+            steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
+            steps.metadata.outputs.dependency-type == 'direct:development'
+          )
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.PAT_TOKEN}}
