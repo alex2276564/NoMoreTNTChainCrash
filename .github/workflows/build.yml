@@ -29,7 +29,7 @@ jobs:
           arguments: build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: NoMoreTNTChainCrash
           path: ${{ github.workspace }}/build/libs/
@@ -46,15 +46,13 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      # Шаг для автоматического мерджа обновлений GitHub Actions
       - name: Auto-merge GitHub Actions updates
         if: steps.metadata.outputs.package-ecosystem == 'github_actions'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.PAT_TOKEN}}
 
-      # Шаг для автоматического мерджа других обновлений (например, Gradle)
       - name: Auto-merge other Dependabot PRs
         if: |
           steps.metadata.outputs.package-ecosystem != 'github_actions' &&
@@ -66,4 +64,4 @@ jobs:
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.PAT_TOKEN}}
