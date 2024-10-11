@@ -1,9 +1,9 @@
 # NoMoreTNTChainCrash 🛡️💥
 
-![Minecraft Version](https://img.shields.io/badge/Minecraft-1.16.5+-brightgreen)
-![Java Version](https://img.shields.io/badge/java-16+-orange)
-![GitHub Release](https://img.shields.io/github/v/release/alex2276564/NoMoreTNTChainCrash?color=blue)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+[![Minecraft Version](https://img.shields.io/badge/Minecraft-1.16.5+-brightgreen)](https://papermc.io/software/paper)
+[![Java Version](https://img.shields.io/badge/java-16+-orange)](https://adoptium.net/installation/linux/)
+[![GitHub Release](https://img.shields.io/github/v/release/alex2276564/NoMoreTNTChainCrash?color=blue)](https://github.com/alex2276564/PermGuard/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **NoMoreTNTChainCrash** is a Minecraft plugin designed to prevent server crashes and lag caused by excessive TNT explosions. It achieves this by removing TNT before automated chain explosions can occur, while still allowing players to manually detonate TNT as desired.
 

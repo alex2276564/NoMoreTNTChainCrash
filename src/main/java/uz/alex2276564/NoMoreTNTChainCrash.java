@@ -9,8 +9,11 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
     @Override
     public void onEnable() {
         showInfo();
-        Bukkit.getPluginManager().registerEvents(new TntExplosionListener(), this);
+        registerListeners();
+    }
 
+    private void registerListeners() {
+        Bukkit.getPluginManager().registerEvents(new TntExplosionListener(), this);
     }
 
     private void showInfo() {
