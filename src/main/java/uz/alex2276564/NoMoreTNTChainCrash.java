@@ -2,7 +2,7 @@ package uz.alex2276564;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import uz.alex2276564.listeners.TntExplosionListener;
+import uz.alex2276564.listeners.EntityExplosionListener;
 
 public final class NoMoreTNTChainCrash extends JavaPlugin {
 
@@ -13,7 +13,7 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
     }
 
     private void registerListeners() {
-        Bukkit.getPluginManager().registerEvents(new TntExplosionListener(), this);
+        Bukkit.getPluginManager().registerEvents(new EntityExplosionListener(), this);
     }
 
     private void showInfo() {
