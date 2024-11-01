@@ -1,0 +1,48 @@
+name: Feature Request
+description: Suggest an idea for NoMoreTNTChainCrash
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for taking the time to suggest a new feature!"
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: Describe the feature you'd like to see added
+      placeholder: A clear and detailed description of what you want to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe the situation where this feature would be useful
+      placeholder: "This feature would be useful when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions you've considered
+    validations:
+      required: false
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Performance Impact
+      description: How do you think this feature would impact server performance?
+      options:
+        - "No impact"
+        - "Minor impact"
+        - "Moderate impact"
+        - "Significant impact"
+        - "Not sure"
+    validations:
+      required: true

@@ -1,0 +1,32 @@
+name: Question
+description: Ask a question about NoMoreTNTChainCrash
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for your interest in NoMoreTNTChainCrash!"
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know about NoMoreTNTChainCrash?
+      placeholder: Please be as specific as possible
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What is your question about?
+      options:
+        - "Installation"
+        - "Compatibility"
+        - "Performance"
+        - "TNT Behavior"
+        - "Ender Dragon"
+        - "Other"
+    validations:
+      required: true

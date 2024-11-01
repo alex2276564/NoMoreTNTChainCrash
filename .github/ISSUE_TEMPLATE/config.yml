@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/alex2276564/NoMoreTNTChainCrash#readme
+    about: Check out the documentation for installation and usage guide
+
+  - name: Problem Demonstration Video
+    url: https://www.youtube.com/watch?v=HEet0raMR4o
+    about: Watch the video demonstrating the issue this plugin solves
