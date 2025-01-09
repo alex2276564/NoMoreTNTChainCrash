@@ -5,5 +5,5 @@ api-version: '1.16'
 load: STARTUP
 softdepend: [UltimateTNT, ExplodeAny, Tnttag, TNTModifier]
 authors: [alex2276564]
-description: NoMoreTNTChainCrash is a Minecraft plugin designed to prevent server crashes and lag caused by excessive TNT explosions. (https://www.youtube.com/watch?v=HEet0raMR4o)
+description: NoMoreTNTChainCrash is a Minecraft plugin designed to prevent server crashes and lag caused by excessive TNT explosions. ( https://www.youtube.com/watch?v=HEet0raMR4o )
 website: https://github.com/alex2276564/NoMoreTNTChainCrash
