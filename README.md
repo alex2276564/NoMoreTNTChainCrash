@@ -17,6 +17,46 @@
 - ✅ **Compatibility:** Fully compatible with the Ender Dragon and other major entities.
 - 🔄 **Auto-Update Check:** On server start, the plugin checks for updates. If a new version is available, a notification is displayed in the console.
 
+## 🧠 Optimization Tips for TNT Handling
+
+If you're looking to further improve server stability and prevent TNT-related lag, here are some **important optimization tips**:
+
+### 🔧 `max-tnt-per-tick` (in `spigot.yml`)
+
+Many so-called "optimization guides" suggest **lowering** this value to prevent TNT lag.  
+**However, this is misleading and often counterproductive.**
+
+- Lowering this value (e.g., to 8) causes TNT to explode more slowly over many ticks, resulting in **longer but weaker lag spikes**.
+- Keeping it at the default value (100) or **increasing** it to 200–300 (depending on your server's hardware) causes TNT explosions to process faster, resulting in **shorter but sharper lag**, which is usually **much better for gameplay**.
+
+> Setting this value too low may make your server more vulnerable to TNT chain lag exploits, as it allows chain reactions to continue over many ticks.
+
+### 🚀 `optimize-explosions: true` (in `paper.yml`)
+
+Enable this option wherever players have access to TNT (e.g., survival, factions):
+
+```yaml
+optimize-explosions: true
+```
+
+This **significantly reduces explosion-related lag** by optimizing how blocks and entities are processed during explosions. It is safe to use and recommended by the Paper community.
+
+> You can skip this on hubs or minigames if TNT is disabled.
+
+---
+
+## 📌 Note
+
+Some budget hosting providers or control panels may recommend lowering `max-tnt-per-tick` in their "optimization guides" — not to actually improve **your** server’s performance, but to reduce CPU usage on **their** hardware.
+
+While this might help them squeeze more clients onto a single machine, it often results in **longer and more noticeable lag** for your players, especially on TNT-heavy servers.
+
+It's also worth noting that many similar tips found in other online guides can originate from people blindly copying advice from older or poorly-researched sources, without testing or understanding the actual effects.
+
+🔧 **Always test and adjust settings based on your server’s real performance and your hardware capabilities.** Don’t blindly follow generic advice — especially if it’s designed for cheap or oversold hosting environments.
+
+---
+
 ## 📥 Installation
 
 1. **Download the latest version of the plugin from the [Releases](https://github.com/alex2276564/NoMoreTNTChainCrash/releases) section.**
