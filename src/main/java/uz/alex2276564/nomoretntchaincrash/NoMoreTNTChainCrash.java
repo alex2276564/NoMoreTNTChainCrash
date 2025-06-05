@@ -1,12 +1,12 @@
-package uz.alex2276564;
+package uz.alex2276564.nomoretntchaincrash;
 
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import uz.alex2276564.listeners.EntityExplosionListener;
-import uz.alex2276564.task.BukkitRunner;
-import uz.alex2276564.task.Runner;
-import uz.alex2276564.utils.UpdateChecker;
+import uz.alex2276564.nomoretntchaincrash.listeners.EntityExplosionListener;
+import uz.alex2276564.nomoretntchaincrash.runner.BukkitRunner;
+import uz.alex2276564.nomoretntchaincrash.runner.Runner;
+import uz.alex2276564.nomoretntchaincrash.utils.UpdateChecker;
 
 public final class NoMoreTNTChainCrash extends JavaPlugin {
 

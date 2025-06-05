@@ -1,4 +1,4 @@
-package uz.alex2276564.listeners;
+package uz.alex2276564.nomoretntchaincrash.listeners;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -7,7 +7,7 @@ import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import uz.alex2276564.events.EntityExplosionEvent;
+import uz.alex2276564.nomoretntchaincrash.events.EntityExplosionEvent;
 
 public class EntityExplosionListener implements Listener {
 

@@ -1,4 +1,4 @@
-package uz.alex2276564.task;
+package uz.alex2276564.nomoretntchaincrash.runner;
 
 import org.jetbrains.annotations.NotNull;
 

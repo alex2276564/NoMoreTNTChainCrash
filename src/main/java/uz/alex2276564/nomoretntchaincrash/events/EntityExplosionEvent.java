@@ -1,4 +1,4 @@
-package uz.alex2276564.events;
+package uz.alex2276564.nomoretntchaincrash.events;
 
 import lombok.Getter;
 import org.bukkit.event.Cancellable;
