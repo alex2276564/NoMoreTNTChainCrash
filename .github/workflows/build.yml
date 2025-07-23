@@ -28,6 +28,8 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for diff scan
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -49,11 +51,21 @@ jobs:
       - name: CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
-      - name: TruffleHog OSS
+      - name: TruffleHog Secrets Scan (full)
+        if: github.event_name != 'pull_request'
         uses: trufflesecurity/trufflehog@v3.90.1
         with:
           path: ./
-          extra_args: --only-verified --no-update
+          extra_args: --only-verified
+
+      - name: TruffleHog Secrets Scan (diff)
+        if: github.event_name == 'pull_request'
+        uses: trufflesecurity/trufflehog@v3.90.1
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
 
   build:
     needs: [security-scan]
