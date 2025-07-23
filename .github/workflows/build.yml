@@ -54,6 +54,7 @@ jobs:
           extra_args: --only-verified
 
   build:
+    needs: [security-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
