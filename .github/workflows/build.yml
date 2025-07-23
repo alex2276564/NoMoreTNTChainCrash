@@ -53,9 +53,7 @@ jobs:
         uses: trufflesecurity/trufflehog@v3.90.1
         with:
           path: ./
-          base: main
-          head: HEAD
-          extra_args: --only-verified
+          extra_args: --only-verified --no-update
 
   build:
     needs: [security-scan]
@@ -74,11 +72,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Update Gradle Wrapper
-        uses: gradle-update/update-gradle-wrapper-action@v2
-        with:
-          repo-token: ${{ secrets.PAT_TOKEN_REPO_WORKFLOW_1 }}
 
       - name: Build with Gradle
         run: ./gradlew build
