@@ -39,6 +39,8 @@ jobs:
 
       - name: Update Gradle Wrapper
         uses: gradle-update/update-gradle-wrapper-action@v2
+        with:
+          repo-token: ${{ secrets.PAT_TOKEN_REPO_WORKFLOW_1 }}
 
       - name: Build with Gradle
         run: ./gradlew build
