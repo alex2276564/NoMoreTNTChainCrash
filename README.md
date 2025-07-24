@@ -79,7 +79,10 @@ Also check out my other plugins for protecting your Minecraft server:
   *LeverLock* - a plugin to prevent rapid lever interactions, which can cause lag or be exploited for unintended game mechanics. Works in conjunction with **AntiRedstoneClock-Remastered**, providing comprehensive protection from redstone-based lag and exploits.
 
 - [**PermGuard**](https://github.com/alex2276564/PermGuard)  
-  *PermGuard* - a plugin to enhance server security. It temporarily revokes admin permissions when a player joins the server, to prevent unauthorized access or potential security breaches. Admins can only restore permissions manually via the console using commands like `lp user playernick permission set *`.
+  *PermGuard* - a plugin to enhance server security. It temporarily revokes admin permissions when a player joins the server and sending security alerts to Telegram, to prevent unauthorized access or potential security breaches. Admins can only restore permissions manually via the console using commands like `lp user playernick permission set *`.
+
+> 🔍 **You can find more of my Minecraft plugins here:**  
+> [https://github.com/alex2276564?tab=repositories](https://github.com/alex2276564?tab=repositories)
 
 ## 🆘 Support
 
