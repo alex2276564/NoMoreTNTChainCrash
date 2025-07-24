@@ -15,10 +15,18 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        showInfo();
-        setupRunner();
-        registerListeners();
-        checkUpdates();
+        try {
+            setupRunner();
+            registerListeners();
+            checkUpdates();
+            showWarning();
+
+            getLogger().info("NoMoreTNTChainCrash has been enabled successfully!");
+        } catch (Exception e) {
+            getLogger().severe("Failed to enable NoMoreTNTChainCrash: " + e.getMessage());
+            e.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+        }
     }
 
     private void setupRunner() {
@@ -34,7 +42,7 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
         updateChecker.checkForUpdates();
     }
 
-    private void showInfo() {
+    private void showWarning() {
         getLogger().info( "");
         getLogger().info("NoMoreTNTChainCrash activated successfully!");
         getLogger().info( "");

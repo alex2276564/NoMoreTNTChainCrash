@@ -10,10 +10,10 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
 
       - name: Lint Markdown files
-        uses: DavidAnson/markdownlint-cli2-action@v20
+        uses: DavidAnson/markdownlint-cli2-action@main
         with:
           globs: '**/*.md' # Checks all Markdown files in the repository
           fix: true # automatically fixes simple problems
@@ -27,7 +27,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
         with:
           fetch-depth: 0  # Required for diff scan
 
@@ -37,13 +37,13 @@ jobs:
           languages: java-kotlin
 
       - name: Set up JDK 16
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@main
         with:
           java-version: 16
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@main
 
       - name: Build for CodeQL
         run: ./gradlew build -x test
@@ -53,14 +53,14 @@ jobs:
 
       - name: TruffleHog Secrets Scan (full)
         if: github.event_name != 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.90.1
+        uses: trufflesecurity/trufflehog@main
         with:
           path: ./
           extra_args: --results=verified,unknown
 
       - name: TruffleHog Secrets Scan (diff)
         if: github.event_name == 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.90.1
+        uses: trufflesecurity/trufflehog@main
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha }}
@@ -71,25 +71,25 @@ jobs:
     needs: [security-scan]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Set up JDK 16
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@main
         with:
           java-version: 16
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@main
 
       - name: Build with Gradle
         run: ./gradlew build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: NoMoreTNTChainCrash
           path: ${{ github.workspace }}/build/libs/
