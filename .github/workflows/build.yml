@@ -7,8 +7,9 @@ on:
     branches: [main]
 
 jobs:
-  markdown-lint:
+  lint-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@main
 
@@ -22,10 +23,12 @@ jobs:
 
   security-scan:
     runs-on: ubuntu-latest
+
     permissions:
       actions: read
       contents: read
       security-events: write
+
     steps:
       - uses: actions/checkout@main
         with:
@@ -68,8 +71,9 @@ jobs:
           extra_args: --results=verified,unknown
 
   build:
-    needs: [security-scan]
+    needs: [lint-and-test, security-scan]
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@main
 
