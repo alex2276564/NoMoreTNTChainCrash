@@ -15,8 +15,11 @@ public class EntityExplosionListener implements Listener {
     public void on(EntityExplodeEvent event) {
         Entity entity = event.getEntity();
 
-        // Check entity need because server crash if explosion caused by Ender Dragon
-        if (isExplosiveEntity(entity)) {
+        /*
+          Returns true if the entity is a known, safe-to-handle explosion source.
+          Prevents issues with certain entities (e.g., EnderDragon) that can crash the server.
+         */
+        if (isSupportedExplosiveEntity(entity)) {
 
             final EntityExplosionEvent e = new EntityExplosionEvent(event);
             Bukkit.getPluginManager().callEvent(e);
@@ -33,7 +36,7 @@ public class EntityExplosionListener implements Listener {
         event.getEntityExplodeEvent().blockList().removeIf(block -> block.getType() == Material.TNT);
     }
 
-    private boolean isExplosiveEntity(Entity entity) {
+    private boolean isSupportedExplosiveEntity(Entity entity) {
         return entity instanceof TNTPrimed ||
                 entity instanceof Creeper ||
                 entity instanceof Wither ||
