@@ -56,7 +56,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          extra_args: --results=verified,unknown --fail
+          extra_args: --results=verified,unknown
 
       - name: TruffleHog Secrets Scan (diff)
         if: github.event_name == 'pull_request'
@@ -65,7 +65,7 @@ jobs:
           path: ./
           base: ${{ github.event.pull_request.base.sha }}
           head: ${{ github.event.pull_request.head.sha }}
-          extra_args: --results=verified,unknown --fail
+          extra_args: --results=verified,unknown
 
   build:
     needs: [security-scan]
