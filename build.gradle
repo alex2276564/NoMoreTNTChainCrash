@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id 'com.gradleup.shadow' version '9.0.0-rc3'
 }
 
 group = 'uz'
@@ -39,7 +40,20 @@ tasks {
     }
 }
 
-def targetJavaVersion = 16
+// ⚠️ NOTE: Shading is required for legacy compatibility!
+// Libraries like Gson may not work correctly on older server versions (1.16.x and below) if not shaded.
+// Shadowing ensures that all required dependencies are bundled and isolated within your final plugin JAR.
+shadowJar {
+    archiveClassifier.set('')
+
+    relocate 'com.google.gson', 'uz.alex2276564.permguard.libs.gson'
+}
+
+build {
+    dependsOn shadowJar
+}
+
+def targetJavaVersion = 17
 
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
