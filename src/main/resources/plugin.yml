@@ -2,6 +2,7 @@ name: NoMoreTNTChainCrash
 version: '${version}'
 main: uz.alex2276564.nomoretntchaincrash.NoMoreTNTChainCrash
 api-version: '1.16'
+folia-supported: true
 load: STARTUP
 softdepend: [UltimateTNT, ExplodeAny, Tnttag, TNTModifier]
 authors: [alex2276564]
