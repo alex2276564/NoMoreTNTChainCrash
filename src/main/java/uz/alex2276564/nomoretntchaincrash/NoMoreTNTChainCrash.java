@@ -19,7 +19,7 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
             setupRunner();
             registerListeners();
             checkUpdates();
-            showWarning();
+//            showWarning();
 
             getLogger().info("NoMoreTNTChainCrash has been enabled successfully!");
         } catch (Exception e) {
@@ -47,14 +47,14 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
         updateChecker.checkForUpdates();
     }
 
-    private void showWarning() {
-        getLogger().info( "");
-        getLogger().info("NoMoreTNTChainCrash activated successfully!");
-        getLogger().info( "");
-        getLogger().warning("WARNING! This plugin removes all tnt's that");
-        getLogger().warning("fell within the explosion radius of another tnt!");
-        getLogger().info( "");
-    }
+//    private void showWarning() {
+//        getLogger().info( "");
+//        getLogger().info("NoMoreTNTChainCrash activated successfully!");
+//        getLogger().info( "");
+//        getLogger().warning("WARNING! This plugin removes all tnt's that");
+//        getLogger().warning("fell within the explosion radius of another tnt!");
+//        getLogger().info( "");
+//    }
 
     @Override
     public void onDisable() {
