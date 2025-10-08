@@ -97,8 +97,11 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
   security-scan-snyk:
-    name: 🔐 Security Scan Snyk
+    name: 🔐 Security Scan Snyk (push)
     runs-on: ubuntu-latest
+
+    # Skip security scan Snyk for PR (for PR we connect GitHub App integration Snyk)
+    if: github.event_name == 'push'
 
     permissions:
       actions: read
@@ -125,10 +128,6 @@ jobs:
           args: --severity-threshold=high --sarif-file-output=snyk.sarif
 
       - name: Upload Snyk scan results to GitHub Security tab
-        # Fix condition to work for both push and PR (excluding forks)
-        if: |
-          github.event_name == 'push' || 
-          (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'snyk.sarif'
@@ -170,7 +169,7 @@ jobs:
       actions: read
       security-events: write
 
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.2.2
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.2.3
     with:
       fail-on-vuln: true
       scan-args: |-
@@ -187,7 +186,7 @@ jobs:
       actions: read
       security-events: write
 
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.2.2
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.2.3
     with:
       fail-on-vuln: true
       scan-args: |-
