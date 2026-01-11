@@ -38,12 +38,12 @@
   //
   // Options:
   // - "at any time" (always active, for testing)
-  // - "before 6am on monday" (weekly, low-traffic window)
+  // - "on monday" (weekly, low-traffic window)
   // - "after 10pm every weekday" (daily, off-hours)
   // ================================================================
 
   "schedule": [
-    "before 6am on monday"    // Weekly check: Monday before 06:00 UTC
+    "on monday"               // Weekly check: Monday
   ],
 
   "timezone": "UTC",          // Use UTC for consistency across environments
