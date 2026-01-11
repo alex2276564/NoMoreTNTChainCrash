@@ -42,6 +42,38 @@ id = "GHSA-269g-pwp5-87pp"
 reason = "JUnit 4.10 from Paper API (compileOnly, test-only dependency)"
 
 # ----------------------------------------------------------------
+# SnakeYAML 1.27 (transitive from Paper API - compileOnly)
+# ----------------------------------------------------------------
+# ⚠️ Paper API 1.16.5 depends on SnakeYAML 1.27 (compileOnly)
+# This is NOT included in final JAR (provided by server runtime)
+# Paper server itself handles YAML parsing, not the plugin
+# ----------------------------------------------------------------
+
+[[IgnoredVulns]]
+id = "GHSA-3mc7-4q67-w48m"
+reason = "SnakeYAML 1.27 from Paper API (compileOnly, not in final JAR). Server runtime handles YAML parsing."
+
+[[IgnoredVulns]]
+id = "GHSA-98wm-3w3q-mw94"
+reason = "SnakeYAML 1.27 from Paper API (compileOnly, not in final JAR). Server runtime handles YAML parsing."
+
+[[IgnoredVulns]]
+id = "GHSA-9w3m-gqgf-c4p9"
+reason = "SnakeYAML 1.27 from Paper API (compileOnly, not in final JAR). Server runtime handles YAML parsing."
+
+[[IgnoredVulns]]
+id = "GHSA-c4r9-r8fh-9vj2"
+reason = "SnakeYAML 1.27 from Paper API (compileOnly, not in final JAR). Server runtime handles YAML parsing."
+
+[[IgnoredVulns]]
+id = "GHSA-hhhw-99gj-p3c3"
+reason = "SnakeYAML 1.27 from Paper API (compileOnly, not in final JAR). Server runtime handles YAML parsing."
+
+[[IgnoredVulns]]
+id = "GHSA-w37g-rhq8-7m4j"
+reason = "SnakeYAML 1.27 from Paper API (compileOnly, not in final JAR). Server runtime handles YAML parsing."
+
+# ----------------------------------------------------------------
 # SnakeYAML 1.33 (from okaeri-configs - implementation)
 # ----------------------------------------------------------------
 # ⚠️ This IS included in final JAR (shaded)
