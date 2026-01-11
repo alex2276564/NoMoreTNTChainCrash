@@ -59,10 +59,8 @@ jobs:
       - name: Lint Markdown files
         uses: DavidAnson/markdownlint-cli2-action@main
         with:
-          globs: '**/*.md' # Checks all Markdown files in the repository
-          fix: true # automatically fixes simple problems
-          config: '.markdownlint.jsonc'  # if you have a configuration file
-  #        continue-on-error: true  # to prevent the build from crashing due to errors in the documentation
+          globs: '**/*.md'
+          config: '.markdownlint.jsonc'
 
   security-scan:
     name: 🔐 Security Scan CodeQL
@@ -169,11 +167,11 @@ jobs:
       actions: read
       security-events: write
 
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.0
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.1
     with:
       fail-on-vuln: true
       scan-args: |-
-        --allow-no-lockfiles
+        --config=osv-scanner.toml
         --recursive
         ./
 
@@ -190,7 +188,7 @@ jobs:
     with:
       fail-on-vuln: true
       scan-args: |-
-        --allow-no-lockfiles
+        --config=osv-scanner.toml
         --recursive
         ./
 
