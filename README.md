@@ -68,11 +68,11 @@ It's also worth noting that many similar tips found in other online guides can o
 
 ## 🛠️ Compatibility
 
-* **Minecraft Versions:** 1.16.5 to the latest release
-* **Server Software:**
-  * ✅ [Paper](https://papermc.io/) (1.16.5 and newer) - **Fully Supported**
-  * ✅ [Folia](https://papermc.io/software/folia) - **Fully Supported** with optimized region-aware scheduling
-  * ❌ Spigot - Not supported
+- **Minecraft Versions:** 1.16.5 to the latest release
+- **Server Software:**
+  - ✅ [Paper](https://papermc.io/) (1.16.5 and newer) - **Fully Supported**
+  - ✅ [Folia](https://papermc.io/software/folia) - **Fully Supported** with optimized region-aware scheduling
+  - ❌ Spigot - Not supported
 - **Compatible Plugins:** Fully compatible with Ender Dragon and other major Minecraft entities
 
 ## 📦 Other Plugins
