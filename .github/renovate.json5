@@ -103,12 +103,6 @@
   // Provides additional vulnerability data beyond GitHub Security Advisories
   "osvVulnerabilityAlerts": true,
 
-  // Allow post-install/post-update scripts in dependencies
-  // ⚠️ Security consideration: malicious packages could run arbitrary code
-  // ✅ Safe if CI runs in isolated environment (GitHub Actions, GitLab CI)
-  // ❌ Risk if running locally without sandboxing
-  "allowScripts": true,           // Keep enabled (CI will catch issues)
-
   // ================================================================
   // 🤖 AUTO-MERGE CONFIGURATION
   // ================================================================
