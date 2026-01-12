@@ -34,19 +34,150 @@
   // ================================================================
   // ⏰ SCHEDULE & TIMING
   // ================================================================
-  // Controls when Renovate scans for and creates updates
+  // Controls when Renovate creates PRs for dependency updates.
   //
-  // Options:
-  // - "at any time" (always active, for testing)
-  // - "on monday" (weekly, low-traffic window)
-  // - "after 10pm every weekday" (daily, off-hours)
+  // 💡 KEY CONCEPT: Day-only schedules vs Time-specific schedules
+  // ----------------------------------------------------------------
+  // Day-only (recommended):   "on monday", "every weekend"
+  // Time-specific (complex):  "before 6am on monday", "after 10pm"
+  //
+  // ⚠️ WHY AVOID time-specific schedules?
+  // ----------------------------------------------------------------
+  // Time-based schedules create synchronization issues:
+  //
+  // 1. Timezone complexity:
+  //    - Your VPS cron runs in timezone A (e.g., UTC)
+  //    - GitHub Actions runs in timezone B (e.g., America/New_York)
+  //    - Mend.io cloud runs in unknown timezone C
+  //    - Result: Same config behaves differently everywhere!
+  //
+  // 2. Clock drift and DST:
+  //    - System clocks may be slightly off
+  //    - Daylight Saving Time changes offset
+  //    - Edge cases near midnight (is it Monday or Tuesday?)
+  //
+  // 3. Maintenance burden:
+  //    - Moving servers → recalculate time offsets
+  //    - Adding CI environments → debug schedule mismatches
+  //    - Time-specific logic is hard to reason about
+  //
+  // ✅ SOLUTION: Two-level scheduling architecture
+  // ----------------------------------------------------------------
+  // Separate WHEN (cron) from WHICH DAYS (renovate.json):
+  //
+  //   Level 1 - Cron (VPS/CI):
+  //     Controls execution frequency (when Renovate process starts)
+  //     Example: 0 1 * * * = daily at 01:00
+  //
+  //   Level 2 - Schedule (renovate.json):
+  //     Controls PR creation days (which days PRs are allowed)
+  //     Example: "on monday" = only Mondays (any time of day)
+  //
+  // Benefits:
+  //   • No time synchronization needed (only day matters)
+  //   • Same config works across all environments
+  //   • Easy to understand and maintain
+  //
+  // ================================================================
+  // 📋 OPTION 1: Universal (Recommended for flexibility)
+  // ================================================================
+  // Best for: Multiple repos with different schedules
+  //
+  // Setup:
+  // ------
+  // VPS Cron (run Renovate daily):
+  //   0 1 * * * /root/renovate/run-renovate.sh
+  //
+  // renovate.json (filter which days to create PRs):
+  //   "schedule": ["on monday"]  ← This setting (day-based)
+  //
+  // How it works:
+  // -------------
+  // • Renovate runs:  7 times/week (cron: every day at 01:00)
+  // • PRs created:    1 time/week (schedule: Monday only)
+  // • Wasted runs:    6/week (Renovate exits early on non-Monday)
+  //
+  // ✅ Pros:
+  //   • Universal: Works on VPS, GitHub Actions, GitLab CI, Mend.io
+  //   • Flexible: Different repos can use different days
+  //     - Repo A: "on monday"    → PRs on Monday
+  //     - Repo B: "on wednesday" → PRs on Wednesday
+  //     - All use same cron (daily), different schedules filter
+  //   • No timezone issues: "on monday" matches any time on Monday
+  //   • Add/remove repos: No cron changes needed
+  //
+  // ⚠️ Cons:
+  //   • Resource usage: Renovate starts 6 extra times (does nothing)
+  //   • Minimal impact: Each wasted run takes ~5-10 seconds
+  //
+  // 💡 TL;DR:
+  // Run Renovate daily via cron, let renovate.json filter days.
+  // You can deploy multiple Renovate instances across different
+  // servers/CI systems without worrying about time synchronization.
+  // Each repo's schedule is self-contained and portable.
+  //
+  // ================================================================
+  // 📋 OPTION 2: Optimized (Recommended for single schedule)
+  // ================================================================
+  // Best for: All repos update on same day, want to save resources
+  //
+  // Setup:
+  // ------
+  // VPS Cron (run Renovate only on Monday):
+  //   0 1 * * 1 /root/renovate/run-renovate.sh
+  //   #       ↑
+  //   #       └─ 1 = Monday (0=Sun, 1=Mon, ..., 6=Sat)
+  //
+  // renovate.json (allow PRs any time):
+  //   "schedule": ["at any time"]  # or omit entirely (default)
+  //
+  // How it works:
+  // -------------
+  // • Renovate runs:  1 time/week (cron: Monday only)
+  // • PRs created:    1 time/week (schedule: always allowed)
+  // • Wasted runs:    0/week (runs only when needed)
+  //
+  // ✅ Pros:
+  //   • Efficient: No wasted Renovate executions
+  //   • Simple: One schedule to maintain (in cron)
+  //   • Resource-friendly: VPS not taxed on unused days
+  //
+  // ⚠️ Cons:
+  //   • Less flexible: All repos must use same day
+  //     - If you want Repo B on Wednesday → must add second cron job
+  //   • Portability: Moving to different CI requires cron reconfiguration
+  //   • Multi-environment: Harder to sync if using VPS + GitHub Actions
+  //
+  // 💡 TL;DR:
+  // Control schedule entirely via cron, renovate.json has no day filter.
+  // More efficient but less portable. Requires cron changes if you
+  // want different schedules per repo or add new environments.
+  //
+  // ================================================================
+  // 🎯 SCHEDULE SYNTAX REFERENCE
+  // ================================================================
+  // Common patterns (day-based, timezone-safe):
+  // -------------------------------------------
+  // "at any time"       → No filtering (always allowed)
+  // "on monday"         → Any time Monday (00:00-23:59 in any TZ)
+  // "on friday"         → Any time Friday
+  // "every weekend"     → Saturday and Sunday
+  // "every weekday"     → Monday through Friday
+  //
+  // Time-specific patterns (avoid unless necessary):
+  // ------------------------------------------------
+  // "before 6am on monday"     → ⚠️ Timezone-dependent
+  // "after 10pm every weekday" → ⚠️ Complex to synchronize
   // ================================================================
 
   "schedule": [
-    "on monday"               // Weekly check: Monday
+    "on monday"  // OPTION 1: Day-only schedule (timezone-safe, portable)
   ],
 
-  "timezone": "UTC",          // Use UTC for consistency across environments
+  "timezone": "UTC",  // Reference timezone for schedule string parsing
+                      // Note: For day-only schedules like "on monday",
+                      // timezone setting has minimal effect (day boundaries
+                      // are fuzzy). Mainly matters for time-specific schedules.
 
   // ================================================================
   // 🎛️ RATE LIMITING
@@ -273,30 +404,6 @@
       "commitMessagePrefix": "[GitHub Actions] ",
       "semanticCommits": "disabled",
       // Example: "[GitHub Actions] Update actions/checkout action to v4.2.0"
-    },
-
-    // ================================================================
-    // 🎯 PROJECT-SPECIFIC RULES
-    // ================================================================
-    // Custom policies for specific dependencies in this project
-    //
-    // 📝 These are project-specific examples. Customize or remove for your project:
-    //    - Ignore unstable/breaking dependencies
-    //    - Pin specific versions
-    //    - Group related updates
-    // ================================================================
-
-    {
-      "description": "🛡️ Project-specific: ignore patch/minor for specific package",
-      "matchManagers": ["gradle"],
-      "matchPackageNames": [
-        "com.sk89q.worldguard:worldguard-bukkit"
-        // Ignore minor/patch updates for a dependency
-        // that frequently breaks compatibility despite semantic versioning
-      ],
-      "matchUpdateTypes": ["patch", "minor"],
-      "enabled": false,
-      // Only notify about major updates (potential breaking changes)
     },
   ],
 
