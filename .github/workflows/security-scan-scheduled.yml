@@ -60,7 +60,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           JAVA_HOME: /opt/java/openjdk # Enforce directory expected by the Snyk container
         with:
-          args: --severity-threshold=high --sarif-file-output=snyk.sarif
+          args: --sarif-file-output=snyk.sarif
 
       - name: Upload Snyk scan results to GitHub Security tab
         # Fix condition to work for both push and PR (excluding forks)
