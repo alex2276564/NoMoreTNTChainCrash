@@ -102,7 +102,7 @@ dependencies {
     // 📚 Libraries (implementation - will be shaded into final JAR)
     // ----------------------------------------------------------------
     // JSON serialization (required for legacy 1.16.x compatibility)
-    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation 'com.google.code.gson:gson:2.14.0'
 
     // Folia compatibility layer
     implementation 'com.tcoded:FoliaLib:0.5.1'
