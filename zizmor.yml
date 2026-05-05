@@ -1,0 +1,17 @@
+rules:
+  # unpinned-uses is intentionally disabled.
+  #
+  # This project uses a two-tier version pinning strategy as a supply chain
+  # attack defense, documented in each workflow file:
+  #
+  # - Jobs WITHOUT secrets/uploads: @main/@master is acceptable
+  # - Jobs WITH secrets/uploads: pinned to semver tag (e.g. @v4)
+  #
+  # SHA pinning is intentionally NOT used because Renovate's
+  # minimumReleaseAge does not apply to digest/pinDigest update types,
+  # meaning SHA pins would give a false sense of security without the
+  # 14-day stabilization delay that semver tags provide.
+  #
+  # See: https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
+  unpinned-uses:
+    disable: true
