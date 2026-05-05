@@ -4,16 +4,23 @@ name: Build Minecraft Plugin
 # Security model for GitHub Actions versions:
 #
 # Jobs WITHOUT secrets/upload/publish (build outputs, SARIF, etc.) →
-# @main is acceptable (no sensitive exposure)
-# Jobs WITH secrets/upload/publish → pinned to semver tag (enables
-# Renovate's minimumReleaseAge=14d delay as supply chain attack defense)
+#   @main is acceptable (no sensitive exposure).
 #
-# SHA pinning is intentionally NOT used: Renovate's minimumReleaseAge does
-# not apply to digest/pinDigest update types, so SHA pinning would give
-# false sense of security without the stabilization delay. See Renovate docs:
+# Jobs WITH secrets/upload/publish → pinned to a semver tag (e.g. @v4),
+#   which allows Renovate's minimumReleaseAge=14d to act as a supply-chain
+#   cooldown before we adopt new action releases.
+#
+# SHA pinning is intentionally NOT used:
+# - Renovate's minimumReleaseAge does not apply to digest/pinDigest updates,
+#   so hard SHA pins would remove the stabilization delay and give a false
+#   sense of security.
+# - We consciously accept the residual risk that a compromised tag/release
+#   could be adopted after the 14-day window in exchange for better
+#   automation and maintainability of this repo.
+#
+# See Renovate docs:
 # https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
 # =============================================================================
-
 on:
   push:
     branches: [ "main" ]
@@ -48,6 +55,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Lint Links (push)
         if: github.event_name != 'pull_request'
@@ -90,6 +99,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -125,6 +136,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5.2.0
@@ -158,6 +171,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Run Trivy
         uses: aquasecurity/trivy-action@v0.36.0
@@ -264,6 +279,7 @@ jobs:
     steps:
       - uses: actions/checkout@main
         with:
+          persist-credentials: false
           fetch-depth: 0  # Required for diff scan
 
       - name: TruffleHog Secrets Scan (full)
@@ -300,6 +316,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -340,6 +358,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
