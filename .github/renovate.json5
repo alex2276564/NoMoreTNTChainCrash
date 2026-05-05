@@ -389,6 +389,16 @@
       // Requires manual review: API changes, deprecations, migrations
     },
 
+    {
+      "description": "⏳ GitHub Actions: 14-day minimumReleaseAge (supply chain defense) + auto-merge (including majors)",
+      "matchManagers": ["github-actions"],
+      // Override global 3-day minimumReleaseAge for GitHub Actions:
+      "minimumReleaseAge": "14 days",
+      // Override the generic 'major = no automerge' rule above:
+      // For GitHub Actions, allow automerge for patch, minor *and* major
+      "automerge": true
+    },
+
     // ================================================================
     // 📦 DEV / TEST DEPENDENCIES GROUPING
     // ================================================================
