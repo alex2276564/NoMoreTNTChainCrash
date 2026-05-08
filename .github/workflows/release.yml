@@ -1,0 +1,256 @@
+name: Release Minecraft Plugin
+
+# =============================================================================
+# Security model for GitHub Actions versions:
+#
+# Jobs WITHOUT secrets/upload/publish (build outputs, SARIF, etc.) →
+#   @main is acceptable (no sensitive exposure).
+#
+# Jobs WITH secrets/upload/publish → pinned to a semver tag (e.g. @v4),
+#   which allows Renovate's minimumReleaseAge=14d to act as a supply-chain
+#   cooldown before we adopt new action releases.
+#
+# SHA pinning is intentionally NOT used:
+# - Renovate's minimumReleaseAge does not apply to digest/pinDigest updates,
+#   so hard SHA pins would remove the stabilization delay and give a false
+#   sense of security.
+# - We consciously accept the residual risk that a compromised tag/release
+#   could be adopted after the 14-day window in exchange for better
+#   automation and maintainability of this repo.
+#
+# See Renovate docs:
+# https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version (e.g. 1.0.3)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (markdown supported)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # ================================================================
+  # 🏗️ BUILD: build JAR and compute SHA-256
+  # ================================================================
+  build:
+    name: 🏗️ Build plugin
+    runs-on: ubuntu-latest
+
+    outputs:
+      jar_file: ${{ steps.jar.outputs.jar_file }}
+      jar_name: ${{ steps.jar.outputs.jar_name }}
+      sha256: ${{ steps.jar.outputs.sha256 }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v5.2.0
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6.1.0
+
+      # Optional safety check: Gradle project version must match input
+      - name: Check Gradle version matches input
+        run: |
+          GRADLE_VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+          echo "Gradle project version: $GRADLE_VERSION"
+          if [ "$GRADLE_VERSION" != "${{ inputs.release_version }}" ]; then
+            echo "::error::Version mismatch: Gradle=$GRADLE_VERSION, input=${{ inputs.release_version }}"
+            exit 1
+          fi
+
+      - name: Build plugin (reproducible)
+        run: |
+          # SOURCE_DATE_EPOCH pins timestamps -> more reproducible JARs
+          export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          chmod +x gradlew
+          ./gradlew clean build --no-daemon
+
+      - name: Locate JAR and compute SHA-256
+        id: jar
+        run: |
+          JAR_FILE=$(ls build/libs/*.jar 2>/dev/null \
+            | grep -v '\-plain\.jar' \
+            | head -1)
+
+          if [ -z "$JAR_FILE" ]; then
+            echo "::error::No JAR found in build/libs/"
+            exit 1
+          fi
+
+          JAR_NAME=$(basename "$JAR_FILE")
+          SHA=$(sha256sum "$JAR_FILE" | cut -d' ' -f1)
+
+          echo "jar_file=$JAR_FILE" >> "$GITHUB_OUTPUT"
+          echo "jar_name=$JAR_NAME"  >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA"         >> "$GITHUB_OUTPUT"
+
+          echo "Built JAR: $JAR_FILE"
+          echo "SHA-256 : $SHA"
+
+      - name: Upload JAR as workflow artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: plugin-jar
+          path: ${{ steps.jar.outputs.jar_file }}
+          retention-days: 3
+          if-no-files-found: error
+
+  # ================================================================
+  # 🔏 SLSA PROVENANCE (Gradle SLSA3 builder)
+  # ================================================================
+  provenance:
+    name: 🔏 SLSA Provenance (SLSA3)
+    needs: build
+
+    permissions:
+      actions: read
+      id-token: write   # required for Sigstore/OIDC signing
+      contents: write   # required to upload provenance as artifact
+
+    # SLSA Gradle builder: MUST be pinned to exact semver tag (vX.Y.Z)
+    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_gradle_slsa3.yml@v2.1.0
+    with:
+      # Path(s) to artifacts to attest, relative to repo root.
+      # This path must match what `./gradlew build` produces.
+      artifact-list: ./build/libs/${{ needs.build.outputs.jar_name }}
+      # Repo is public, so we explicitly allow logging to public Rekor
+      rekor-log-public: true
+
+  # ================================================================
+  # 🚀 GITHUB RELEASE
+  # ================================================================
+  release:
+    name: 🚀 GitHub Release
+    needs: [ build, provenance ]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download plugin JAR
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: plugin-jar
+          path: dist
+
+      - name: Download SLSA provenance
+        uses: actions/download-artifact@v8.0.1
+        with:
+          # NOTE: Run this workflow once, then look at the "Artifacts"
+          # section of the run to see the exact name of the artifact that
+          # the SLSA Gradle builder produced. Replace "slsa-provenance"
+          # below with that name if it differs.
+          name: slsa-provenance
+          path: dist
+
+      - name: List dist content (debug)
+        run: ls -R dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3.0.0
+        with:
+          # No automatic "v" prefix: the tag will be exactly what you type
+          # in the "release_version" input (e.g. "1.0.3").
+          tag_name: ${{ inputs.release_version }}
+          name: NoMoreTNTChainCrash ${{ inputs.release_version }}
+          body: |
+            ${{ inputs.release_notes }}
+
+            ---
+
+            <details>
+            <summary><strong>Click to view how to verify this build (checksums & SLSA)</strong></summary>
+
+            ### 1. Verify SHA-256 checksum
+
+            After downloading the JAR from this release, run:
+
+            **Linux / macOS:**
+            ```bash
+            sha256sum ${{ needs.build.outputs.jar_name }}
+            ```
+
+            **Windows (PowerShell):**
+            ```powershell
+            Get-FileHash ${{ needs.build.outputs.jar_name }} -Algorithm SHA256
+            ```
+
+
+            Expected output:
+
+            ```text
+            ${{ needs.build.outputs.sha256 }}  ${{ needs.build.outputs.jar_name }}
+            ```
+
+            If the checksum does not match, **do not use this JAR** and please
+            open an issue: https://github.com/${{ github.repository }}/issues
+
+            ---
+
+            ### 2. Verify SLSA provenance (supply-chain integrity)
+
+            This project publishes SLSA Build Level 3 provenance for the JAR.
+            Advanced users can verify that the JAR was built by this repository's
+            GitHub Actions workflow without tampering.
+
+            #### 2.1. Install \`slsa-verifier\`
+
+            Option A — via Go:
+
+            ```bash
+            go install github.com/slsa-framework/slsa-verifier/v2/cmd/slsa-verifier@latest
+            ```
+
+            Option B — prebuilt binaries:
+
+            1. Go to: https://github.com/slsa-framework/slsa-verifier/releases/latest
+            2. Download the binary for your OS
+            3. Put it into your \$PATH and make it executable
+
+            #### 2.2. Download artifacts from this release
+
+            From this GitHub Release page, download:
+
+            - \`${{ needs.build.outputs.jar_name }}\`
+            - \`${{ needs.build.outputs.jar_name }}.intoto.jsonl\`
+
+            (The \`.intoto.jsonl\` file is the signed SLSA provenance attestation.)
+
+            #### 2.3. Run verification
+
+            ```bash
+            slsa-verifier verify-artifact \
+              ${{ needs.build.outputs.jar_name }} \
+              --provenance-path ${{ needs.build.outputs.jar_name }}.intoto.jsonl \
+              --source-uri github.com/${{ github.repository }} \
+              --source-tag ${{ inputs.release_version }}
+            ```
+
+            If verification fails, or if the provenance refers to a different
+            repository, tag, or commit than expected, **do not trust this build**
+            and please open an issue immediately:
+            https://github.com/${{ github.repository }}/issues
+
+            </details>
+          files: |
+            dist/*.jar
+            dist/*.intoto.jsonl
+          fail_on_unmatched_files: true

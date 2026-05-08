@@ -27,16 +27,14 @@ on:
     - cron: '0 4 * * *' # every day at 4:00 UTC
   workflow_dispatch:    # can be run manually from the GitHub UI
 
-permissions:
-  contents: read
-  actions: read
-
 jobs:
   security-scan:
     name: 🔐 Security Scan CodeQL
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
+      actions: read
       security-events: write
 
     steps:
@@ -69,6 +67,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
+      actions: read
       security-events: write
 
     steps:
@@ -103,6 +103,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
+      actions: read
       security-events: write
 
     steps:
@@ -134,6 +136,8 @@ jobs:
     name: 🔐 Security Scan OSV
 
     permissions:
+      contents: read
+      actions: read
       security-events: write
 
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.5
@@ -149,6 +153,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
+      actions: read
       security-events: write
 
     steps:

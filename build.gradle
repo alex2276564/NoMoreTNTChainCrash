@@ -114,14 +114,15 @@ dependencies {
 // Ensures reproducible builds and better security scanning
 //
 // 📝 How to use:
-// • When adding/updating dependencies, run:
-//   ./gradlew dependencies --write-locks
-// • Commit both build.gradle and gradle.lockfile
-// • Renovate will automatically update lockfile in PRs
+// 1. If you update dependencies, first DELETE the existing lockfile:
+//    rm gradle.lockfile (or delete it manually)
+// 2. Then generate a fresh lock by running:
+//    ./gradlew dependencies --write-locks --refresh-dependencies
+// 3. Commit both build.gradle and the new gradle.lockfile
 //
 // 🔐 Benefits:
-// • Reproducible builds across environments
-// • Security scanners (OSV, Trivy) see ALL dependencies
+// • Reproducible builds across all environments
+// • Full visibility for security scanners (OSV, Trivy)
 // • Protection against dependency confusion attacks
 // ================================================================
 

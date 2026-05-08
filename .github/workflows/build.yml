@@ -37,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       pull-requests: write
 
     steps:
@@ -51,6 +52,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       checks: write
 
     steps:
@@ -94,6 +96,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       actions: read
       security-events: write
 
@@ -131,6 +134,7 @@ jobs:
     if: github.event_name == 'push'
 
     permissions:
+      contents: read
       actions: read
       security-events: write
 
@@ -166,6 +170,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       actions: read
       security-events: write
 
@@ -260,6 +265,7 @@ jobs:
     if: github.event_name == 'pull_request'
 
     permissions:
+      contents: read
       pull-requests: write
 
     steps:
