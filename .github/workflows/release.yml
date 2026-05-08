@@ -65,31 +65,34 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6.1.0
 
-      # Optional safety check: Gradle project version must match input
       - name: Check Gradle version matches input
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
           GRADLE_VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
           echo "Gradle project version: $GRADLE_VERSION"
-          if [ "$GRADLE_VERSION" != "${{ inputs.release_version }}" ]; then
-            echo "::error::Version mismatch: Gradle=$GRADLE_VERSION, input=${{ inputs.release_version }}"
+          if [ "$GRADLE_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "::error::Version mismatch: Gradle=$GRADLE_VERSION, input=$RELEASE_VERSION"
             exit 1
           fi
 
       - name: Build plugin (reproducible)
         run: |
-          # SOURCE_DATE_EPOCH pins timestamps -> more reproducible JARs
-          export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          export SOURCE_DATE_EPOCH
           chmod +x gradlew
           ./gradlew clean build --no-daemon
 
       - name: Locate JAR and compute SHA-256
         id: jar
         run: |
-          JAR_FILE=$(ls build/libs/*.jar 2>/dev/null \
+          # Use printf instead of ls to avoid SC2010, still filter out -plain.jar
+          JAR_FILE=$(printf '%s\n' build/libs/*.jar 2>/dev/null \
             | grep -v '\-plain\.jar' \
             | head -1)
 
-          if [ -z "$JAR_FILE" ]; then
+          # If glob didn't match, JAR_FILE will literally be "build/libs/*.jar"
+          if [ -z "$JAR_FILE" ] || [ "$JAR_FILE" = 'build/libs/*.jar' ]; then
             echo "::error::No JAR found in build/libs/"
             exit 1
           fi
@@ -97,9 +100,11 @@ jobs:
           JAR_NAME=$(basename "$JAR_FILE")
           SHA=$(sha256sum "$JAR_FILE" | cut -d' ' -f1)
 
-          echo "jar_file=$JAR_FILE" >> "$GITHUB_OUTPUT"
-          echo "jar_name=$JAR_NAME"  >> "$GITHUB_OUTPUT"
-          echo "sha256=$SHA"         >> "$GITHUB_OUTPUT"
+          {
+            echo "jar_file=$JAR_FILE"
+            echo "jar_name=$JAR_NAME"
+            echo "sha256=$SHA"
+          } >> "$GITHUB_OUTPUT"
 
           echo "Built JAR: $JAR_FILE"
           echo "SHA-256 : $SHA"
@@ -165,6 +170,10 @@ jobs:
         run: ls -R dist
 
       - name: Create GitHub Release
+        # zizmor: softprops/action-gh-release is intentionally used over
+        # `gh release` CLI — it provides atomic asset upload, glob support,
+        # and release update semantics not easily replicated with the CLI.
+        # zizmor ignore[superfluous-actions]
         uses: softprops/action-gh-release@v3.0.0
         with:
           # No automatic "v" prefix: the tag will be exactly what you type
