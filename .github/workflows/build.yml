@@ -178,6 +178,8 @@ jobs:
         run: pip install semgrep
 
       - name: Install semgrep-core-proprietary
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
         run: semgrep install-semgrep-pro
 
       - name: Run Semgrep
