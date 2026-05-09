@@ -183,11 +183,11 @@ jobs:
         run: |
           semgrep scan \
             --config auto \
-            --config "p/java" \
-            --config "p/owasp-top-ten" \
-            --config "p/secrets" \
-            --config "p/github-actions" \
-            --config "p/supply-chain" \
+            --config "p/java --pro" \
+            --config "p/owasp-top-ten --pro" \
+            --config "p/secrets --pro" \
+            --config "p/github-actions --pro" \
+            --config "p/supply-chain --pro" \
             --exclude "**/build/**" \
             --exclude "**/.gradle/**" \
             --sarif --output semgrep.sarif \
