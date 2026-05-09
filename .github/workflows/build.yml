@@ -153,10 +153,13 @@ jobs:
   security-scan-semgrep:
     name: 🔐 Security Scan Semgrep
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
       security-events: write
+
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
     steps:
       - name: Harden Runner
@@ -174,17 +177,18 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Semgrep
-        run: pip install semgrep
+      - name: Setup Socket Firewall
+        uses: socketdev/action@v1.3.2
+        with:
+          mode: firewall-free
 
-      - name: Install semgrep-core-proprietary
-        env:
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-        run: semgrep install-semgrep-pro
+      - name: Install Semgrep via Socket Firewall
+        run: sfw pip install semgrep
+
+      - name: Setup Semgrep Pro Engine via Socket Firewall
+        run: sfw semgrep install-semgrep-pro
 
       - name: Run Semgrep
-        env:
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
         run: |
           semgrep scan \
             --pro \
