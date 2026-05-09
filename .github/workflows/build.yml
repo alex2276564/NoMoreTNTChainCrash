@@ -41,7 +41,13 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@main
+      - name: Harden Runner
+        uses: step-security/harden-runner@main
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
@@ -56,7 +62,13 @@ jobs:
       checks: write
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
@@ -81,7 +93,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@main
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
@@ -101,7 +119,13 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
@@ -126,6 +150,50 @@ jobs:
       - name: CodeQL Analysis
         uses: github/codeql-action/analyze@v4
 
+  security-scan-semgrep:
+    name: 🔐 Security Scan Semgrep (CE)
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config auto \
+            --config "p/java" \
+            --config "p/owasp-top-ten" \
+            --config "p/secrets" \
+            --config "p/github-actions" \
+            --exclude "**/build/**" \
+            --exclude "**/.gradle/**" \
+            --sarif --output semgrep.sarif \
+            --error
+
+  #      - name: Upload results to GitHub Security tab
+  #        uses: github/codeql-action/upload-sarif@v3
+  #        if: always()
+  #        with:
+  #          sarif_file: semgrep.sarif
+
   security-scan-snyk:
     name: 🔐 Security Scan Snyk (push)
     runs-on: ubuntu-latest
@@ -139,7 +207,13 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
@@ -175,7 +249,13 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
@@ -247,7 +327,13 @@ jobs:
       security-events: write
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
@@ -269,7 +355,13 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@main
+      - name: Harden Runner
+        uses: step-security/harden-runner@main
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
@@ -283,7 +375,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@main
+      - name: Harden Runner
+        uses: step-security/harden-runner@main
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@main
         with:
           persist-credentials: false
           fetch-depth: 0  # Required for diff scan
@@ -321,7 +419,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
@@ -363,7 +467,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
