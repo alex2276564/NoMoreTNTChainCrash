@@ -95,12 +95,7 @@ jobs:
         uses: step-security/action-actionlint@v1.72.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: >-
-            ${{ 
-              github.event_name == 'pull_request' 
-              ? 'github-pr-review' 
-              : 'github-check' 
-            }}
+          reporter: ${{ github.event_name == 'pull_request' && 'github-pr-review' || 'github-check' }}
           level: error
 
   lint-renovate:
@@ -157,12 +152,7 @@ jobs:
         uses: umbrelladocs/action-linkspector@v1.5.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: >-
-            ${{ 
-              github.event_name == 'pull_request' 
-              ? 'github-pr-review' 
-              : 'github-check' 
-            }}
+          reporter: ${{ github.event_name == 'pull_request' && 'github-pr-review' || 'github-check' }}
           fail_level: error
 
   lint-markdown:
