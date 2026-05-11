@@ -1,16 +1,39 @@
 name: Scheduled Security Scan
 
 # =============================================================================
-# Security model for GitHub Actions versions:
+# Security model for GitHub Actions: action versioning & runner egress
 #
-# Jobs WITHOUT secrets/upload/publish (build outputs, SARIF, etc.) →
-#   @main is acceptable (no sensitive exposure).
+# RATIONALE
+# ---------
+# This is an open-source project. Our primary goals are:
+# - protect against supply-chain attacks via compromised GitHub Actions;
+# - prevent exfiltration or misuse of write-capable credentials
+#   (GITHUB_TOKEN with write permissions, environment/cloud secrets, etc.);
+# - keep maintenance overhead low by relying on Renovate where possible.
 #
-# Jobs WITH secrets/upload/publish → pinned to a semver tag (e.g. @v4),
-#   which allows Renovate's minimumReleaseAge=14d to act as a supply-chain
-#   cooldown before we adopt new action releases.
+# ACTION VERSIONING
+# -----------------
+# Low-risk jobs:
+# - GITHUB_TOKEN has only read-level permissions (e.g. contents: read)
+# - No user-defined secrets (`secrets.*`) or environment-specific secrets
+# - No external publish/upload (packages, deployments, code scanning, etc.)
+#
+# → For such jobs, using @main for third-party actions is acceptable: it does
+#   not introduce additional sensitive exposure beyond the public source code.
+#
+# High-risk jobs:
+# - Any write-level permissions on GITHUB_TOKEN (contents, checks,
+#   pull-requests, deployments, packages, security-events, id-token, ...)
+#   OR any use of secrets/credentials
+#   OR any external publish/upload
+#
+# → Third-party actions MUST be pinned to a semver tag (e.g. @v1 or @v1.0.0),
+#   so Renovate's minimumReleaseAge=14d provides a supply-chain cooldown
+#   before we adopt new action releases.
 #
 # SHA pinning is intentionally NOT used:
+# - This is an open-source project; source code confidentiality is not a
+#   primary concern.
 # - Renovate's minimumReleaseAge does not apply to digest/pinDigest updates,
 #   so hard SHA pins would remove the stabilization delay and give a false
 #   sense of security.
@@ -18,8 +41,25 @@ name: Scheduled Security Scan
 #   could be adopted after the 14-day window in exchange for better
 #   automation and maintainability of this repo.
 #
+# EGRESS POLICY (step-security/harden-runner)
+# ------------------------------------------
+# High-risk jobs (see above):
+# - Use egress-policy: block with an explicit allowed-endpoints allowlist.
+#   Rationale: jobs that can write to GitHub or external systems, or that
+#   have access to secrets, must not be able to exfiltrate data or call
+#   arbitrary endpoints.
+#
+# Low-risk jobs (read-only scanning / linting):
+# - Use egress-policy: audit.
+#   Rationale: security/scanning tools (Semgrep, Trivy, etc.) may legitimately
+#   contact varying endpoints across versions. Strict blocking would require
+#   frequent allowlist maintenance with little security benefit, since these
+#   jobs have no write-level permissions and no secrets to exfiltrate.
+#
 # See Renovate docs:
-# https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
+#   https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
+# See Harden-Runner docs:
+#   https://docs.stepsecurity.io/harden-runner
 # =============================================================================
 
 on:
@@ -71,6 +111,66 @@ jobs:
       - name: CodeQL Analysis
         uses: github/codeql-action/analyze@v4
 
+  security-scan-semgrep:
+    name: 🔐 Security Scan Semgrep
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.19.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.x'
+
+      - name: Setup Socket Firewall
+        uses: socketdev/action@v1.3.2
+        with:
+          mode: firewall-free
+
+      - name: Install Semgrep via Socket Firewall
+        run: sfw pip install semgrep
+
+      - name: Setup Semgrep Pro Engine via Socket Firewall
+        run: sfw semgrep install-semgrep-pro
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --pro \
+            --config auto \
+            --config "p/java" \
+            --config "p/owasp-top-ten" \
+            --config "p/secrets" \
+            --config "p/github-actions" \
+            --config "p/supply-chain" \
+            --exclude "**/build/**" \
+            --exclude "**/.gradle/**" \
+            --exclude "**/test/**" \
+            --sarif --output semgrep.sarif \
+            --error
+
+      - name: Upload results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
   security-scan-snyk:
     name: 🔐 Security Scan Snyk
     runs-on: ubuntu-latest
@@ -110,6 +210,7 @@ jobs:
 
       - name: Upload Snyk scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
+        if: always()
         with:
           sarif_file: 'snyk.sarif'
 
@@ -150,6 +251,7 @@ jobs:
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
+        if: always()
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -184,7 +286,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Checkout repository repository
+      - name: Checkout repository
         uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
@@ -193,4 +295,3 @@ jobs:
         uses: zizmorcore/zizmor-action@v0.5.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          advanced-security: false

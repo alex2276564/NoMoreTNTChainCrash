@@ -13,9 +13,10 @@
 //        • minimumReleaseAge = 3 days before updating
 //        • Patch/minor: auto-merge after 3-day stabilization
 //        • Major: manual review (no automerge)
-//    - GitHub Actions (CI/CD supply chain):
+//    - GitHub Actions (CI/CD):
 //        • minimumReleaseAge = 14 days before updating any action
 //        • Patch/minor/major: auto-merge after 14-day cooldown
+//        • Grouped into a single PR (less noise)
 //    - Dev/test dependencies:
 //        • grouped into a single PR (less noise)
 //
@@ -50,16 +51,6 @@
   "extends": [
     "config:recommended"      // Recommended baseline config
   ],
-
-  // ================================================================
-  // 🔧 CONFIG MIGRATION
-  // ================================================================
-  // When Renovate deprecates config options, it can create a PR to
-  // automatically update your renovate.json to the new syntax.
-  // Auto-merge is intentionally disabled for migration PRs — review
-  // manually before merging to understand what changed.
-  // ================================================================
-  "configMigration": true,
 
   // ================================================================
   // ⏰ SCHEDULE & TIMING
@@ -116,7 +107,7 @@
   // Setup:
   // ------
   // VPS Cron (run Renovate daily):
-  //   0 1 * * * /root/renovate/run-renovate.sh
+  //   0 1 * * * /opt/renovate/run-renovate.sh
   //
   // renovate.json (filter which days to create PRs):
   //   "schedule": ["on monday"]  ← This setting (day-based)
@@ -177,7 +168,7 @@
   // Setup:
   // ------
   // VPS Cron (run Renovate only on Monday):
-  //   0 1 * * 1 /root/renovate/run-renovate.sh
+  //   0 1 * * 1 /opt/renovate/run-renovate.sh
   //   #       ↑
   //   #       └─ 1 = Monday (0=Sun, 1=Mon, ..., 6=Sat)
   //
@@ -405,13 +396,18 @@
     },
 
     {
-      "description": "⏳ GitHub Actions: 14-day minimumReleaseAge (supply chain defense) + auto-merge (including majors)",
+      "description": "⏳ GitHub Actions: 14-day minimumReleaseAge (supply-chain defense) + grouped auto-merge (including majors)",
       "matchManagers": ["github-actions"],
       // Override global 3-day minimumReleaseAge for GitHub Actions:
       "minimumReleaseAge": "14 days",
-      // Override the generic 'major = no automerge' rule above:
-      // For GitHub Actions, allow automerge for patch, minor *and* major
-      "automerge": true
+      // Allow automerge for patch, minor *and* major updates of GitHub Actions:
+      "automerge": true,
+      // Group all GitHub Actions updates into a single PR (less noise):
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions",
+      // Do not split the group by major/minor/patch:
+      "separateMajorMinor": false,
+      "separateMinorPatch": false
     },
 
     // ================================================================

@@ -1,0 +1,92 @@
+name: OpenSSF Scorecard
+
+# =============================================================================
+# Security model for GitHub Actions: action versioning & runner egress
+#
+# RATIONALE
+# ---------
+# This is an open-source project. Our primary goals are:
+# - protect against supply-chain attacks via compromised GitHub Actions;
+# - prevent exfiltration or misuse of write-capable credentials
+#   (GITHUB_TOKEN with write permissions, environment/cloud secrets, etc.);
+# - keep maintenance overhead low by relying on Renovate where possible.
+#
+# ACTION VERSIONING
+# -----------------
+# Low-risk jobs:
+# - GITHUB_TOKEN has only read-level permissions (e.g. contents: read)
+# - No user-defined secrets (`secrets.*`) or environment-specific secrets
+# - No external publish/upload (packages, deployments, code scanning, etc.)
+#
+# → For such jobs, using @main for third-party actions is acceptable: it does
+#   not introduce additional sensitive exposure beyond the public source code.
+#
+# High-risk jobs:
+# - Any write-level permissions on GITHUB_TOKEN (contents, checks,
+#   pull-requests, deployments, packages, security-events, id-token, ...)
+#   OR any use of secrets/credentials
+#   OR any external publish/upload
+#
+# → Third-party actions MUST be pinned to a semver tag (e.g. @v1 or @v1.0.0),
+#   so Renovate's minimumReleaseAge=14d provides a supply-chain cooldown
+#   before we adopt new action releases.
+#
+# SHA pinning is intentionally NOT used:
+# - This is an open-source project; source code confidentiality is not a
+#   primary concern.
+# - Renovate's minimumReleaseAge does not apply to digest/pinDigest updates,
+#   so hard SHA pins would remove the stabilization delay and give a false
+#   sense of security.
+# - We consciously accept the residual risk that a compromised tag/release
+#   could be adopted after the 14-day window in exchange for better
+#   automation and maintainability of this repo.
+#
+# EGRESS POLICY (step-security/harden-runner)
+# ------------------------------------------
+# High-risk jobs (see above):
+# - Use egress-policy: block with an explicit allowed-endpoints allowlist.
+#   Rationale: jobs that can write to GitHub or external systems, or that
+#   have access to secrets, must not be able to exfiltrate data or call
+#   arbitrary endpoints.
+#
+# Low-risk jobs (read-only scanning / linting):
+# - Use egress-policy: audit.
+#   Rationale: security/scanning tools (Semgrep, Trivy, etc.) may legitimately
+#   contact varying endpoints across versions. Strict blocking would require
+#   frequent allowlist maintenance with little security benefit, since these
+#   jobs have no write-level permissions and no secrets to exfiltrate.
+#
+# See Renovate docs:
+#   https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
+# See Harden-Runner docs:
+#   https://docs.stepsecurity.io/harden-runner
+# =============================================================================
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@main
+        with:
+          egress-policy: audit
+
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@main
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: false
+
+      - name: Upload Scorecard results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results.sarif

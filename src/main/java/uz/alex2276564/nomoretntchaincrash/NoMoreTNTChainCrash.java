@@ -4,9 +4,11 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import uz.alex2276564.nomoretntchaincrash.listeners.EntityExplosionListener;
+import uz.alex2276564.nomoretntchaincrash.utils.UpdateChecker;
 import uz.alex2276564.nomoretntchaincrash.utils.runner.FoliaRunner;
 import uz.alex2276564.nomoretntchaincrash.utils.runner.Runner;
-import uz.alex2276564.nomoretntchaincrash.utils.UpdateChecker;
+
+import java.util.logging.Level;
 
 public final class NoMoreTNTChainCrash extends JavaPlugin {
 
@@ -23,8 +25,7 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
 
             getLogger().info("NoMoreTNTChainCrash has been enabled successfully!");
         } catch (Exception e) {
-            getLogger().severe("Failed to enable NoMoreTNTChainCrash: " + e.getMessage());
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Failed to enable NoMoreTNTChainCrash", e);
             getServer().getPluginManager().disablePlugin(this);
         }
     }

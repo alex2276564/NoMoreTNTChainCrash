@@ -14,7 +14,7 @@ rules:
   # We consciously accept the residual risk that a compromised tag/release
   # could pass the minimumReleaseAge window and be adopted, in exchange for
   # better automation and maintainability for this repository. Additional
-  # scanners (CodeQL, Trivy, Snyk, OSV, Socket, StepSecurity) are used to
+  # scanners (CodeQL, Trivy, Snyk, OSV, Socket, StepSecurity, SemGrep) are used to
   # reduce that remaining supply-chain risk.
   #
   # See: https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
