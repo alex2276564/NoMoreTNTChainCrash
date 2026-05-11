@@ -126,7 +126,7 @@ jobs:
 
       - name: Validate Renovate Config via Socket Firewall
         run: |
-          sfw bunx renovate-config-validator --strict
+          sfw bun x renovate-config-validator --strict
 
   lint-links:
     name: 🧹 Lint Links
