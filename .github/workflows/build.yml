@@ -115,7 +115,7 @@ jobs:
         uses: actions/checkout@main
 
       - name: Setup Bun
-        uses: step-security/setup-bun@main
+        uses: oven-sh/setup-bun@main
         with:
           bun-version: latest
 
@@ -126,7 +126,7 @@ jobs:
 
       - name: Validate Renovate Config via Socket Firewall
         run: |
-          sfw bun x renovate-config-validator --strict
+          sfw bunx --package renovate renovate-config-validator --strict
 
   lint-links:
     name: 🧹 Lint Links
