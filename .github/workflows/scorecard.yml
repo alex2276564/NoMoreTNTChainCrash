@@ -73,6 +73,11 @@ permissions:
 jobs:
   analysis:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: read
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@main
