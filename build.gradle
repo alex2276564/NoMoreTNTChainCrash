@@ -164,9 +164,14 @@ shadowJar {
 // 🏗️ BUILD CONFIGURATION
 // ================================================================
 
-// Always build shadowJar instead of regular JAR
-build {
-    dependsOn shadowJar
+// Integrating shadowJar into the build lifecycle
+tasks.assemble {
+    dependsOn(shadowJar)
+}
+
+// Disable the standard JAR so that it doesn't overwrite the Shadow file
+tasks.jar {
+    enabled = false
 }
 
 // ================================================================

@@ -66,7 +66,7 @@ on:
   workflow_dispatch:
     inputs:
       release_version:
-        description: 'Release version (e.g. 1.0.3)'
+        description: 'Release version (e.g. 1.0.0)'
         required: true
         type: string
       release_notes:
@@ -94,7 +94,15 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@v2.19.1
         with:
-          egress-policy: audit
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            oss.sonatype.org:443
+            plugins.gradle.org:443
+            repo.maven.apache.org:443
+            repo.papermc.io:443
+            repo.tcoded.com:443
+            repo1.maven.org:443
 
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
@@ -206,18 +214,41 @@ jobs:
           name: plugin-jar
           path: dist
 
-      - name: Download SLSA provenance
+      - name: Download SLSA attestations artifact
         uses: actions/download-artifact@v8.0.1
         with:
-          # NOTE: Run this workflow once, then look at the "Artifacts"
-          # section of the run to see the exact name of the artifact that
-          # the SLSA Gradle builder produced. Replace "slsa-provenance"
-          # below with that name if it differs.
-          name: slsa-provenance
-          path: dist
+          # The artifact name varies, but always ends with “-slsa-attestations”
+          pattern: '*-slsa-attestations'
+          path: slsa
+          merge-multiple: true
 
-      - name: List dist content (debug)
-        run: ls -R dist
+      - name: Extract SLSA provenance file
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          # Unzip all .tgz files that may have arrived
+          shopt -s nullglob
+          for tgz in slsa/**/*.tgz slsa/*.tgz; do
+            echo "Unpacking $tgz"
+            tar -xzf "$tgz" -C slsa
+          done
+
+          # Find a .slsa file
+          SLSA_FILE=$(find slsa -type f -name '*.slsa' | head -1)
+          if [ -z "$SLSA_FILE" ]; then
+            echo "::error::No .slsa provenance file found in SLSA artifact"
+            find slsa -maxdepth 3 -type f || true
+            exit 1
+          fi
+
+          # Copy it next to the JAR file and give it a descriptive name
+          cp "$SLSA_FILE" "dist/${{ needs.build.outputs.jar_name }}.build.slsa"
+          echo "Provenance copied to dist/${{ needs.build.outputs.jar_name }}.build.slsa"
+
+          echo "=== dist contents ==="
+          ls -R dist
 
       - name: Create GitHub Release
         # zizmor: softprops/action-gh-release is intentionally used over
@@ -226,7 +257,7 @@ jobs:
         uses: softprops/action-gh-release@v3.0.0 # zizmor: ignore[superfluous-actions]
         with:
           # No automatic "v" prefix: the tag will be exactly what you type
-          # in the "release_version" input (e.g. "1.0.3").
+          # in the "release_version" input (e.g. "1.0.0").
           tag_name: ${{ inputs.release_version }}
           name: NoMoreTNTChainCrash ${{ inputs.release_version }}
           body: |
@@ -269,7 +300,11 @@ jobs:
             Advanced users can verify that the JAR was built by this repository's
             GitHub Actions workflow without tampering.
 
-            #### 2.1. Install \`slsa-verifier\`
+            #### 2.1. Download both:
+               - `${{ needs.build.outputs.jar_name }}`
+               - `${{ needs.build.outputs.jar_name }}.build.slsa`
+
+            #### 2.2. Install \`slsa-verifier\`
 
             Option A — via Go:
 
@@ -283,32 +318,20 @@ jobs:
             2. Download the binary for your OS
             3. Put it into your \$PATH and make it executable
 
-            #### 2.2. Download artifacts from this release
-
-            From this GitHub Release page, download:
-
-            - \`${{ needs.build.outputs.jar_name }}\`
-            - \`${{ needs.build.outputs.jar_name }}.intoto.jsonl\`
-
-            (The \`.intoto.jsonl\` file is the signed SLSA provenance attestation.)
-
-            #### 2.3. Run verification
+            #### 2.3. Run:
 
             ```bash
             slsa-verifier verify-artifact \
               ${{ needs.build.outputs.jar_name }} \
-              --provenance-path ${{ needs.build.outputs.jar_name }}.intoto.jsonl \
-              --source-uri github.com/${{ github.repository }} \
-              --source-tag ${{ inputs.release_version }}
+              --provenance-path ${{ needs.build.outputs.jar_name }}.build.slsa \
+              --source-uri github.com/${{ github.repository }}
             ```
 
-            If verification fails, or if the provenance refers to a different
-            repository, tag, or commit than expected, **do not trust this build**
-            and please open an issue immediately:
+            If verification fails, **do not trust this file** and open an issue:
             https://github.com/${{ github.repository }}/issues
 
             </details>
           files: |
-            dist/*.jar
-            dist/*.intoto.jsonl
+            dist/${{ needs.build.outputs.jar_name }}
+            dist/${{ needs.build.outputs.jar_name }}.build.slsa
           fail_on_unmatched_files: true
