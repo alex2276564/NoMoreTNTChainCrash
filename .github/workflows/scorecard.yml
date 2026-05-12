@@ -76,21 +76,21 @@ jobs:
 
     permissions:
       contents: read
-      security-events: read
+      security-events: write
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@main
+        uses: step-security/harden-runner@v2.19.1
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@main
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
       - name: Run Scorecard analysis
-        uses: ossf/scorecard-action@main
+        uses: ossf/scorecard-action@v2.4.3
         with:
           results_file: results.sarif
           results_format: sarif
