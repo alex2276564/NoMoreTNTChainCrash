@@ -84,6 +84,11 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          persist-credentials: false
+
       - name: Run Scorecard analysis
         uses: ossf/scorecard-action@main
         with:
