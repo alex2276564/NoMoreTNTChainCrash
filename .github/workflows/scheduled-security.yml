@@ -5,59 +5,53 @@ name: Scheduled Security Scan
 #
 # RATIONALE
 # ---------
-# This is an open-source project. Our primary goals are:
-# - protect against supply-chain attacks via compromised GitHub Actions;
-# - prevent exfiltration or misuse of write-capable credentials
-#   (GITHUB_TOKEN with write permissions, environment/cloud secrets, etc.);
-# - keep maintenance overhead low by relying on Renovate where possible.
+# This is an open-source project maintained by a single developer.
+# Threat model (for CI / GitHub Actions specifically):
+# - Third-party GitHub Actions and build tools may eventually be compromised.
+# - There is no capacity to manually review SHA-pinned action diffs on every
+#   update.
+# - Therefore, the primary defence against malicious GitHub Actions is
+#   runtime monitoring and egress control on the runner, not version pinning.
 #
 # ACTION VERSIONING
 # -----------------
-# Low-risk jobs:
-# - GITHUB_TOKEN has only read-level permissions (e.g. contents: read)
-# - No user-defined secrets (`secrets.*`) or environment-specific secrets
-# - No external publish/upload (packages, deployments, code scanning, etc.)
-#
-# → For such jobs, using @main for third-party actions is acceptable: it does
-#   not introduce additional sensitive exposure beyond the public source code.
-#
-# High-risk jobs:
-# - Any write-level permissions on GITHUB_TOKEN (contents, checks,
-#   pull-requests, deployments, packages, security-events, id-token, ...)
-#   OR any use of secrets/credentials
-#   OR any external publish/upload
-#
-# → Third-party actions MUST be pinned to a semver tag (e.g. @v1 or @v1.0.0),
-#   so Renovate's minimumReleaseAge=14d provides a supply-chain cooldown
-#   before we adopt new action releases.
+# All third-party actions are referenced using @main / @master or the latest
+# convenient semver tag. We do NOT treat tag pinning as a strong security
+# control in this repository.
 #
 # SHA pinning is intentionally NOT used:
-# - This is an open-source project; source code confidentiality is not a
-#   primary concern.
-# - Renovate's minimumReleaseAge does not apply to digest/pinDigest updates,
-#   so hard SHA pins would remove the stabilization delay and give a false
-#   sense of security.
-# - We consciously accept the residual risk that a compromised tag/release
-#   could be adopted after the 14-day window in exchange for better
-#   automation and maintainability of this repo.
+# - It only provides strong guarantees when combined with manual review of
+#   every upstream commit, which this project cannot sustain.
+# - Without that review discipline, SHA pins can still point to malicious
+#   code that was present before the pin was taken, and they add maintenance
+#   overhead without realistic benefit here.
+#
+# Semver/tag pinning is also NOT enforced as a primary control:
+# - Tags on GitHub are mutable; recent supply-chain incidents (e.g. compromised
+#   actions overwriting historical tags) have shown that tag pinning alone does
+#   not reliably prevent malicious updates.
+#
+# Primary CI / GitHub Actions supply-chain controls:
+# - step-security/harden-runner is used in every job to protect the CI runner:
+#   * monitors outbound network, file, and process activity at runtime;
+#   * enforces a Global Block List of known-malicious endpoints maintained
+#     by StepSecurity's SOC;
+#   * supports per-job egress allowlists in block mode to limit exfiltration
+#     impact if an action or dependency is compromised.
 #
 # EGRESS POLICY (step-security/harden-runner)
 # ------------------------------------------
-# High-risk jobs (see above):
-# - Use egress-policy: block with an explicit allowed-endpoints allowlist.
-#   Rationale: jobs that can write to GitHub or external systems, or that
-#   have access to secrets, must not be able to exfiltrate data or call
-#   arbitrary endpoints.
+# High-risk jobs (write permissions / secrets / CD & publishing):
+# - egress-policy: block with an explicit allowed-endpoints allowlist.
+#   Rationale: limits the blast radius if an action or dependency is
+#   compromised and tries to exfiltrate data.
 #
-# Low-risk jobs (read-only scanning / linting):
-# - Use egress-policy: audit.
-#   Rationale: security/scanning tools (Semgrep, Trivy, etc.) may legitimately
-#   contact varying endpoints across versions. Strict blocking would require
-#   frequent allowlist maintenance with little security benefit, since these
-#   jobs have no write-level permissions and no secrets to exfiltrate.
+# Low-risk jobs (read-only, no secrets):
+# - egress-policy: audit.
+#   Rationale: scanning tools may legitimately contact varying endpoints
+#   across versions; strict blocking would require frequent maintenance
+#   for little benefit when no sensitive credentials are present.
 #
-# See Renovate docs:
-#   https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
 # See Harden-Runner docs:
 #   https://docs.stepsecurity.io/harden-runner
 # =============================================================================
@@ -82,12 +76,12 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.19.4
+        uses: step-security/harden-runner@main
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
@@ -98,7 +92,7 @@ jobs:
           queries: security-and-quality
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5.2.0
+        uses: actions/setup-java@main
         with:
           java-version: 17
           distribution: 'temurin'
@@ -124,22 +118,32 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.19.4
+        uses: step-security/harden-runner@main
         with:
-          egress-policy: audit
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            api.socket.dev:443
+            files.pythonhosted.org:443
+            firewall-api.socket.dev:443
+            github.com:443
+            metrics.semgrep.dev:443
+            pypi.org:443
+            release-assets.githubusercontent.com:443
+            semgrep.dev:443
 
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@main
         with:
           python-version: '3.x'
 
       - name: Setup Socket Firewall
-        uses: socketdev/action@v1.3.2
+        uses: socketdev/action@main
         with:
           mode: firewall-free
 
@@ -182,26 +186,39 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.19.4
+        uses: step-security/harden-runner@main
         with:
-          egress-policy: audit
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            api.snyk.io:443
+            github.com:443
+            oss.sonatype.org:443
+            plugins-artifacts.gradle.org:443
+            plugins.gradle.org:443
+            release-assets.githubusercontent.com:443
+            repo.maven.apache.org:443
+            repo.papermc.io:443
+            repo.tcoded.com:443
+            repo1.maven.org:443
+            services.gradle.org:443
 
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5.2.0
+        uses: actions/setup-java@main
         with:
           java-version: 17
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.1.0
+        uses: gradle/actions/setup-gradle@main
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/gradle-9-jdk17@v1.0.0
+        uses: snyk/actions/gradle-9-jdk17@main
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           JAVA_HOME: /opt/java/openjdk # Enforce directory expected by the Snyk container
@@ -225,17 +242,17 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.19.4
+        uses: step-security/harden-runner@main
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@main
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -282,16 +299,16 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.19.4
+        uses: step-security/harden-runner@main
         with:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
       - name: Run zizmor 🌈
-        uses: zizmorcore/zizmor-action@v0.5.6
+        uses: zizmorcore/zizmor-action@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

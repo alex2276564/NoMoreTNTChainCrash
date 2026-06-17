@@ -5,59 +5,53 @@ name: Release Minecraft Plugin
 #
 # RATIONALE
 # ---------
-# This is an open-source project. Our primary goals are:
-# - protect against supply-chain attacks via compromised GitHub Actions;
-# - prevent exfiltration or misuse of write-capable credentials
-#   (GITHUB_TOKEN with write permissions, environment/cloud secrets, etc.);
-# - keep maintenance overhead low by relying on Renovate where possible.
+# This is an open-source project maintained by a single developer.
+# Threat model (for CI / GitHub Actions specifically):
+# - Third-party GitHub Actions and build tools may eventually be compromised.
+# - There is no capacity to manually review SHA-pinned action diffs on every
+#   update.
+# - Therefore, the primary defence against malicious GitHub Actions is
+#   runtime monitoring and egress control on the runner, not version pinning.
 #
 # ACTION VERSIONING
 # -----------------
-# Low-risk jobs:
-# - GITHUB_TOKEN has only read-level permissions (e.g. contents: read)
-# - No user-defined secrets (`secrets.*`) or environment-specific secrets
-# - No external publish/upload (packages, deployments, code scanning, etc.)
-#
-# → For such jobs, using @main for third-party actions is acceptable: it does
-#   not introduce additional sensitive exposure beyond the public source code.
-#
-# High-risk jobs:
-# - Any write-level permissions on GITHUB_TOKEN (contents, checks,
-#   pull-requests, deployments, packages, security-events, id-token, ...)
-#   OR any use of secrets/credentials
-#   OR any external publish/upload
-#
-# → Third-party actions MUST be pinned to a semver tag (e.g. @v1 or @v1.0.0),
-#   so Renovate's minimumReleaseAge=14d provides a supply-chain cooldown
-#   before we adopt new action releases.
+# All third-party actions are referenced using @main / @master or the latest
+# convenient semver tag. We do NOT treat tag pinning as a strong security
+# control in this repository.
 #
 # SHA pinning is intentionally NOT used:
-# - This is an open-source project; source code confidentiality is not a
-#   primary concern.
-# - Renovate's minimumReleaseAge does not apply to digest/pinDigest updates,
-#   so hard SHA pins would remove the stabilization delay and give a false
-#   sense of security.
-# - We consciously accept the residual risk that a compromised tag/release
-#   could be adopted after the 14-day window in exchange for better
-#   automation and maintainability of this repo.
+# - It only provides strong guarantees when combined with manual review of
+#   every upstream commit, which this project cannot sustain.
+# - Without that review discipline, SHA pins can still point to malicious
+#   code that was present before the pin was taken, and they add maintenance
+#   overhead without realistic benefit here.
+#
+# Semver/tag pinning is also NOT enforced as a primary control:
+# - Tags on GitHub are mutable; recent supply-chain incidents (e.g. compromised
+#   actions overwriting historical tags) have shown that tag pinning alone does
+#   not reliably prevent malicious updates.
+#
+# Primary CI / GitHub Actions supply-chain controls:
+# - step-security/harden-runner is used in every job to protect the CI runner:
+#   * monitors outbound network, file, and process activity at runtime;
+#   * enforces a Global Block List of known-malicious endpoints maintained
+#     by StepSecurity's SOC;
+#   * supports per-job egress allowlists in block mode to limit exfiltration
+#     impact if an action or dependency is compromised.
 #
 # EGRESS POLICY (step-security/harden-runner)
 # ------------------------------------------
-# High-risk jobs (see above):
-# - Use egress-policy: block with an explicit allowed-endpoints allowlist.
-#   Rationale: jobs that can write to GitHub or external systems, or that
-#   have access to secrets, must not be able to exfiltrate data or call
-#   arbitrary endpoints.
+# High-risk jobs (write permissions / secrets / CD & publishing):
+# - egress-policy: block with an explicit allowed-endpoints allowlist.
+#   Rationale: limits the blast radius if an action or dependency is
+#   compromised and tries to exfiltrate data.
 #
-# Low-risk jobs (read-only scanning / linting):
-# - Use egress-policy: audit.
-#   Rationale: security/scanning tools (Semgrep, Trivy, etc.) may legitimately
-#   contact varying endpoints across versions. Strict blocking would require
-#   frequent allowlist maintenance with little security benefit, since these
-#   jobs have no write-level permissions and no secrets to exfiltrate.
+# Low-risk jobs (read-only, no secrets):
+# - egress-policy: audit.
+#   Rationale: scanning tools may legitimately contact varying endpoints
+#   across versions; strict blocking would require frequent maintenance
+#   for little benefit when no sensitive credentials are present.
 #
-# See Renovate docs:
-#   https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
 # See Harden-Runner docs:
 #   https://docs.stepsecurity.io/harden-runner
 # =============================================================================
@@ -92,7 +86,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.19.4
+        uses: step-security/harden-runner@main
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -105,35 +99,37 @@ jobs:
             repo1.maven.org:443
 
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@main
         with:
           persist-credentials: false
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Set up JDK 17 (Temurin)
-        uses: actions/setup-java@v5.2.0
+        uses: actions/setup-java@main
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.1.0
+        uses: gradle/actions/setup-gradle@main
 
-      #      - name: Check Gradle version matches input
-      #        env:
-      #          RELEASE_VERSION: ${{ inputs.release_version }}
-      #        run: |
-      #          GRADLE_VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
-      #          echo "Gradle project version: $GRADLE_VERSION"
-      #          if [ "$GRADLE_VERSION" != "$RELEASE_VERSION" ]; then
-      #            echo "::error::Version mismatch: Gradle=$GRADLE_VERSION, input=$RELEASE_VERSION"
-      #            exit 1
-      #          fi
+      - name: Check Gradle version matches input
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          GRADLE_VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+          echo "Gradle project version: $GRADLE_VERSION"
+          if [ "$GRADLE_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "::error::Version mismatch: Gradle=$GRADLE_VERSION, input=$RELEASE_VERSION"
+            exit 1
+          fi
 
       - name: Build plugin (reproducible)
         run: |
           SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
           export SOURCE_DATE_EPOCH
-          chmod +x gradlew
           ./gradlew clean build --no-daemon
 
       - name: Locate JAR and compute SHA-256
@@ -163,7 +159,7 @@ jobs:
           echo "SHA-256 : $SHA"
 
       - name: Upload JAR as workflow artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@main
         with:
           name: plugin-jar
           path: ${{ steps.jar.outputs.jar_file }}
@@ -172,6 +168,12 @@ jobs:
 
   # ================================================================
   # 🔏 SLSA PROVENANCE (Gradle SLSA3 builder)
+  #
+  # Hardening note:
+  # We cannot attach step-security/harden-runner to this job because it uses
+  # a reusable workflow via "uses:". GitHub does not allow injecting extra
+  # steps into a called reusable workflow, so any egress restrictions would
+  # need to be implemented in the upstream SLSA builder workflow itself.
   # ================================================================
   provenance:
     name: 🔏 SLSA Provenance (SLSA3)
@@ -204,18 +206,18 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.19.4
+        uses: step-security/harden-runner@main
         with:
           egress-policy: audit
 
       - name: Download plugin JAR
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@main
         with:
           name: plugin-jar
           path: dist
 
       - name: Download SLSA attestations artifact
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@main
         with:
           # The artifact name varies, but always ends with “-slsa-attestations”
           pattern: '*-slsa-attestations'
@@ -254,7 +256,7 @@ jobs:
         # zizmor: softprops/action-gh-release is intentionally used over
         # `gh release` CLI — it provides atomic asset upload, glob support,
         # and release update semantics not easily replicated with the CLI.
-        uses: softprops/action-gh-release@v3.0.0 # zizmor: ignore[superfluous-actions]
+        uses: softprops/action-gh-release@main # zizmor: ignore[superfluous-actions]
         with:
           # No automatic "v" prefix: the tag will be exactly what you type
           # in the "release_version" input (e.g. "1.0.0").

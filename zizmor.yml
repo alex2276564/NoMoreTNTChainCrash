@@ -1,22 +1,20 @@
 rules:
   # unpinned-uses is intentionally disabled.
   #
-  # This project uses a two-tier version pinning strategy as a supply chain
-  # attack defense, documented in each workflow file:
+  # This project does not use SHA pinning or enforced semver pinning for
+  # GitHub Actions. See the security model comment at the top of each
+  # workflow file for the full rationale. In short:
   #
-  # - Jobs WITHOUT secrets/uploads: @main/@master is acceptable.
-  # - Jobs WITH secrets/uploads: pinned to a semver tag (e.g. @v4).
-  #
-  # SHA pinning is intentionally NOT used because Renovate's minimumReleaseAge
-  # does not apply to digest/pinDigest update types, meaning SHA pins would
-  # remove the 14-day stabilization delay and give a false sense of security.
-  #
-  # We consciously accept the residual risk that a compromised tag/release
-  # could pass the minimumReleaseAge window and be adopted, in exchange for
-  # better automation and maintainability for this repository. Additional
-  # scanners (CodeQL, Trivy, Snyk, OSV, Socket, StepSecurity, SemGrep) are used to
-  # reduce that remaining supply-chain risk.
-  #
-  # See: https://docs.renovatebot.com/key-concepts/minimum-release-age/#which-update-types-take-minimumreleaseage-into-account
+  # - SHA pinning is only meaningful when paired with manual diff review
+  #   of every upstream commit, which a single-developer project cannot
+  #   sustain. Without that review, SHA pins add complexity but do not
+  #   reliably prevent malicious code execution.
+  # - Tag pinning does not prevent tag-overwrite attacks (tags are mutable
+  #   on GitHub; recent incidents have shown historical tags being
+  #   overwritten to point to malicious commits).
+  # - CI / GitHub Actions supply-chain protection is delegated primarily
+  #   to step-security/harden-runner, which is designed to detect and limit
+  #   suspicious or malicious behaviour at runtime (network/file/process
+  #   activity) regardless of the action ref format used.
   unpinned-uses:
     disable: true

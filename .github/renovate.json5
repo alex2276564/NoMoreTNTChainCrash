@@ -9,14 +9,13 @@
 //    - Security updates:
 //        • GitHub vulnerabilityAlerts + OSV → dedicated security PRs
 //        • Security fix PRs: immediate auto-merge (may bypass CI)
-//    - Stable releases (libraries):
+//    - Stable releases:
 //        • minimumReleaseAge = 3 days before updating
 //        • Patch/minor: auto-merge after 3-day stabilization
 //        • Major: manual review (no automerge)
 //    - GitHub Actions (CI/CD):
-//        • minimumReleaseAge = 14 days before updating any action
-//        • Patch/minor/major: auto-merge after 14-day cooldown
-//        • Grouped into a single PR (less noise)
+//        • Patch/minor/major: auto-merge, grouped into a single PR
+//        • Grouping keeps CI config updates low-noise
 //    - Dev/test dependencies:
 //        • grouped into a single PR (less noise)
 //
@@ -396,10 +395,8 @@
     },
 
     {
-      "description": "⏳ GitHub Actions: 14-day minimumReleaseAge (supply-chain defense) + grouped auto-merge (including majors)",
+      "description": "🔁 GitHub Actions: grouped auto-merge (including majors)",
       "matchManagers": ["github-actions"],
-      // Override global 3-day minimumReleaseAge for GitHub Actions:
-      "minimumReleaseAge": "14 days",
       // Allow automerge for patch, minor *and* major updates of GitHub Actions:
       "automerge": true,
       // Group all GitHub Actions updates into a single PR (less noise):
