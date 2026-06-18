@@ -208,11 +208,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@main
-        with:
-          python-version: '3.x'
-
       - name: Setup Socket Firewall
         uses: socketdev/action@main
         with:
@@ -220,12 +215,11 @@ jobs:
 
       - name: Install Strix via Socket Firewall
         run: |
-          sfw pip install uv
-          sfw uv pip install --system strix
+          sfw curl -sSL https://strix.ai/install | bash
 
       - name: Run Code Analysis via ${{ env.STRIX_LLM }}
         run: |
-          python -m strix -n \
+          strix -n \
             --mode quick \
             --source \
             --target . \
