@@ -225,7 +225,7 @@ jobs:
 
       - name: Run Code Analysis via ${{ env.STRIX_LLM }}
         run: |
-          /home/runner/.local/bin/strix -n \
+          python -m strix -n \
             --mode quick \
             --source \
             --target . \
