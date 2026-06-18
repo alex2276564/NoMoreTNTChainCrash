@@ -72,13 +72,9 @@ on:
   workflow_dispatch:
     inputs:
       ai_model:
-        description: 'Select an AI model for pentesting:'
+        description: 'Enter the AI model slug for the pentest in liteLLM format (e.g. openrouter/openai/gpt-chat-latest):'
         required: true
-        default: 'openrouter/nvidia/nemotron-3-ultra-550b-a55b:free'
-        type: choice
-        options:
-          - 'openrouter/nvidia/nemotron-3-ultra-550b-a55b:free'
-          - 'openrouter/openai/gpt-oss-120b:free'
+        type: string
 
 permissions:
   contents: read
@@ -206,7 +202,7 @@ jobs:
 
     env:
       STRIX_LLM: ${{ github.event.inputs.ai_model }}
-      LLM_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      LLM_API_KEY: ${{ secrets.STRIX_API_KEY }}
 
     steps:
       - name: Harden Runner

@@ -238,6 +238,8 @@ jobs:
 
       - name: Extract SLSA provenance file
         shell: bash
+        env:
+          JAR_NAME: ${{ needs.build.outputs.jar_name }}
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -258,8 +260,8 @@ jobs:
           fi
 
           # Copy it next to the JAR file and give it a descriptive name
-          cp "$SLSA_FILE" "dist/${{ needs.build.outputs.jar_name }}.build.slsa"
-          echo "Provenance copied to dist/${{ needs.build.outputs.jar_name }}.build.slsa"
+          cp -- "$SLSA_FILE" "dist/${JAR_NAME}.build.slsa"
+          echo "Provenance copied to dist/${JAR_NAME}.build.slsa"
 
           echo "=== dist contents ==="
           ls -R dist
