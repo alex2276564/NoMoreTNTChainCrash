@@ -215,7 +215,7 @@ jobs:
 
       - name: Install Strix via Socket Firewall
         run: |
-          sfw curl https://strix.ai/install | bash
+          sfw curl -sSL https://raw.githubusercontent.com/usestrix/strix/refs/heads/main/scripts/install.sh | bash
 
       - name: Run Code Analysis via ${{ env.STRIX_LLM }}
         run: |
