@@ -223,13 +223,13 @@ jobs:
           sfw pip install uv
           sfw uv pip install --system strix
 
-      - name: Run Code Analysis via gpt-oss-120b
+      - name: Run Code Analysis via ${{ env.STRIX_LLM }}
         run: |
-          strix -n \
+          /home/runner/.local/bin/strix -n \
             --mode quick \
             --source \
             --target . \
-            --ignore ".gradle/,build/,target/,.git/,.idea/"
+            --ignore ".gradle/,build/"
 
   security-scan-snyk:
     name: 🔐 Security Scan Snyk
