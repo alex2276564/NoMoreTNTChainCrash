@@ -194,7 +194,7 @@ jobs:
       actions: read
 
     env:
-      STRIX_LLM: "openrouter/poolside/laguna-xs.2:free"
+      STRIX_LLM: "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"
       LLM_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 
     steps:
