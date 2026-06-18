@@ -69,7 +69,16 @@ env:
 on:
   schedule:
     - cron: '0 4 * * *' # every day at 4:00 UTC
-  workflow_dispatch:    # can be run manually from the GitHub UI
+  workflow_dispatch:
+    inputs:
+      ai_model:
+        description: 'Select an AI model for pentesting:'
+        required: true
+        default: 'openrouter/nvidia/nemotron-3-ultra-550b-a55b:free'
+        type: choice
+        options:
+          - 'openrouter/nvidia/nemotron-3-ultra-550b-a55b:free'
+          - 'openrouter/openai/gpt-oss-120b:free'
 
 permissions:
   contents: read
@@ -189,12 +198,14 @@ jobs:
     name: 🔐 Security Scan Strix
     runs-on: ubuntu-latest
 
+    if: github.event_name == 'workflow_dispatch'
+
     permissions:
       contents: read
       actions: read
 
     env:
-      STRIX_LLM: "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free"
+      STRIX_LLM: ${{ github.event.inputs.ai_model }}
       LLM_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 
     steps:
@@ -217,8 +228,8 @@ jobs:
         run: |
           strix -n \
             -t ./ \
-            --scan-mode quick \
-            --scope-mode diff
+            --scan-mode standard \
+            --scope-mode full
 
   security-scan-snyk:
     name: 🔐 Security Scan Snyk
