@@ -228,7 +228,8 @@ jobs:
           strix -n \
             --mode quick \
             --source \
-            --target .
+            --target . \
+            --ignore ".gradle/,build/,target/,.git/,.idea/"
 
   security-scan-snyk:
     name: 🔐 Security Scan Snyk
