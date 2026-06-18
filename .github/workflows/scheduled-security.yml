@@ -194,8 +194,8 @@ jobs:
       actions: read
 
     env:
-      STRIX_LLM: "groq/llama-3.3-70b-versatile"
-      LLM_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      STRIX_LLM: "openrouter/poolside/laguna-xs.2:free"
+      LLM_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
 
     steps:
       - name: Harden Runner
