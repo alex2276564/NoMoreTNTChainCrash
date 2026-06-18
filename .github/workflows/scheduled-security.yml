@@ -194,7 +194,7 @@ jobs:
       actions: read
 
     env:
-      STRIX_LLM: "groq/gpt-oss-120b"
+      STRIX_LLM: "groq/llama-3.3-70b-versatile"
       LLM_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
     steps:
