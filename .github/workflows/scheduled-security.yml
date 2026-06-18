@@ -207,6 +207,7 @@ jobs:
         uses: actions/checkout@main
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Install Strix
         run: |
