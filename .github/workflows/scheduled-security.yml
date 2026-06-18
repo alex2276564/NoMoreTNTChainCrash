@@ -213,9 +213,10 @@ jobs:
         with:
           mode: firewall-free
 
+      # Added the -k flag to ignore SSL certificate substitution for curl to work correctly through a Socket Firewall proxy
       - name: Install Strix via Socket Firewall
         run: |
-          sfw curl -sSL https://raw.githubusercontent.com/usestrix/strix/refs/heads/main/scripts/install.sh | bash
+          sfw curl -k -sSL https://strix.ai/install | bash
 
       - name: Run Code Analysis via ${{ env.STRIX_LLM }}
         run: |
