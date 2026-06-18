@@ -66,6 +66,7 @@ permissions:
 
 jobs:
   analysis:
+    name: 📊 OpenSSF Scorecard Analysis
     runs-on: ubuntu-latest
 
     permissions:

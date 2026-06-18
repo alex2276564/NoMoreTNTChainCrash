@@ -212,7 +212,7 @@ jobs:
           languages: java-kotlin
           queries: security-and-quality
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DIST }})
         uses: actions/setup-java@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -333,7 +333,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DIST }})
         uses: actions/setup-java@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -377,7 +377,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@main
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -524,6 +524,7 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [
       lint-actions,
+      lint-renovate,
       lint-links,
       lint-markdown,
       security-scan,
@@ -550,7 +551,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DIST }})
         uses: actions/setup-java@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -565,7 +566,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@main
         with:
-          name: NoMoreTNTChainCrash
+          name: ${{ env.PLUGIN_NAME }}
           path: ${{ github.workspace }}/build/libs/
 
   build-push:
@@ -573,6 +574,7 @@ jobs:
     if: github.event_name == 'push'
     needs: [
       lint-actions,
+      lint-renovate,
       lint-links,
       lint-markdown,
       security-scan,
@@ -599,7 +601,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DIST }})
         uses: actions/setup-java@main
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -614,5 +616,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@main
         with:
-          name: NoMoreTNTChainCrash
+          name: ${{ env.PLUGIN_NAME }}
           path: ${{ github.workspace }}/build/libs/

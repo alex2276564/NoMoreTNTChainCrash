@@ -1,6 +1,18 @@
 name: Release Minecraft Plugin
 
 # =============================================================================
+# WORKFLOW CONFIG
+# -----------------------------------------------------------------------------
+# PLUGIN_NAME  — human-readable plugin name used for artifacts & releases.
+# JAVA_VERSION — JDK version used for build and analysis.
+# JAVA_DIST    — JDK distribution.
+# =============================================================================
+env:
+  PLUGIN_NAME: NoMoreTNTChainCrash
+  JAVA_VERSION: '17'
+  JAVA_DIST: 'temurin'
+
+# =============================================================================
 # Security model for GitHub Actions: action versioning & runner egress
 #
 # RATIONALE
@@ -106,11 +118,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Set up JDK 17 (Temurin)
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DIST }})
         uses: actions/setup-java@main
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DIST }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@main
@@ -261,7 +273,7 @@ jobs:
           # No automatic "v" prefix: the tag will be exactly what you type
           # in the "release_version" input (e.g. "1.0.0").
           tag_name: ${{ inputs.release_version }}
-          name: NoMoreTNTChainCrash ${{ inputs.release_version }}
+          name: ${{ env.PLUGIN_NAME }} ${{ inputs.release_version }}
           body: |
             ${{ inputs.release_notes }}
 

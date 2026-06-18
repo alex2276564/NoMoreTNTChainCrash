@@ -1,6 +1,16 @@
 name: Scheduled Security Scan
 
 # =============================================================================
+# WORKFLOW CONFIG
+# -----------------------------------------------------------------------------
+# JAVA_VERSION — JDK version used for build and analysis.
+# JAVA_DIST    — JDK distribution.
+# =============================================================================
+env:
+  JAVA_VERSION: '17'
+  JAVA_DIST: 'temurin'
+
+# =============================================================================
 # Security model for GitHub Actions: action versioning & runner egress
 #
 # RATIONALE
@@ -85,19 +95,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run CodeQL
+      - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
           queries: security-and-quality
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DIST }})
         uses: actions/setup-java@main
         with:
-          java-version: 17
-          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DIST }}
 
-      - name: Build
+      - name: Build for CodeQL
         run: |
           chmod +x gradlew
           ./gradlew build -x test
@@ -175,6 +185,51 @@ jobs:
         with:
           sarif_file: semgrep.sarif
 
+  security-scan-strix:
+    name: 🔐 Security Scan Strix
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      actions: read
+
+    env:
+      STRIX_LLM: "groq/gpt-oss-120b"
+      LLM_API_KEY: ${{ secrets.GROQ_API_KEY }}
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@main
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@main
+        with:
+          python-version: '3.x'
+
+      - name: Setup Socket Firewall
+        uses: socketdev/action@main
+        with:
+          mode: firewall-free
+
+      - name: Install Strix via Socket Firewall
+        run: |
+          sfw pip install uv
+          sfw uv pip install --system strix
+
+      - name: Run Code Analysis via gpt-oss-120b
+        run: |
+          strix -n \
+            --mode quick \
+            --source \
+            --target .
+
   security-scan-snyk:
     name: 🔐 Security Scan Snyk
     runs-on: ubuntu-latest
@@ -208,11 +263,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DIST }})
         uses: actions/setup-java@main
         with:
-          java-version: 17
-          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DIST }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@main
@@ -252,7 +307,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@main
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
