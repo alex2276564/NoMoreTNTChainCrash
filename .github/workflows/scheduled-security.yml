@@ -69,12 +69,55 @@ env:
 on:
   schedule:
     - cron: '0 4 * * *' # every day at 4:00 UTC
+
   workflow_dispatch:
     inputs:
       ai_model:
         description: 'Enter the AI model slug for the pentest in liteLLM format (e.g. openrouter/openai/gpt-chat-latest):'
         required: true
         type: string
+
+      scan_mode:
+        description: |
+          Strix Scan Mode depth (Choose based on your use case):
+          - quick: Fast checks for obvious vulnerabilities. (Best for CI/CD, PRs, smoke tests. Duration: Minutes).
+          - standard: Balanced routine review. Uses source-aware mapping and static triage to prioritize dynamic exploit validation paths. (Duration: 30m - 1h).
+          - deep: Thorough pentest. DEFAULT mode. Runs broad triage (semgrep, AST search, secrets, supply-chain checks) and systematically validates candidates dynamically. Explores edge cases, chained vulnerabilities, and complex paths. (Duration: 1-4h).
+        required: true
+        type: choice
+        options:
+          - standard
+          - quick
+          - deep
+        default: 'standard'
+
+      scope_mode:
+        description: 'Scope Mode (full: scan everything, diff: only changed files, auto: auto-detect in CI)'
+        required: true
+        type: choice
+        options:
+          - full
+          - diff
+          - auto
+        default: 'full'
+
+      llm_timeout:
+        description: 'LLM request timeout in seconds (increase for huge contexts)'
+        required: true
+        type: string
+        default: '600'
+
+      max_retries:
+        description: 'Maximum number of retries for API failures'
+        required: true
+        type: string
+        default: '7'
+
+      instruction:
+        description: 'Custom AI Agent prompt / constraints'
+        required: true
+        type: string
+        default: 'AUTONOMY MODE: Dynamically analyze the repo structure and autonomously skip all non-production files, test suites, build artifacts, and package caches (like gradle, node_modules, build, target). Focus 100% of reasoning exclusively on core production source code and active endpoints.'
 
 permissions:
   contents: read
@@ -202,7 +245,9 @@ jobs:
 
     env:
       STRIX_LLM: ${{ github.event.inputs.ai_model }}
-      LLM_API_KEY: ${{ secrets.STRIX_API_KEY }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_TIMEOUT: ${{ github.event.inputs.llm_timeout }}
+      STRIX_LLM_MAX_RETRIES: ${{ github.event.inputs.max_retries }}
 
     steps:
       - name: Harden Runner
@@ -221,12 +266,17 @@ jobs:
           curl -sSL https://strix.ai/install | bash
 
       - name: Run Code Analysis via ${{ env.STRIX_LLM }}
+        env:
+          STRIX_SCAN_MODE: ${{ github.event.inputs.scan_mode }}
+          STRIX_SCOPE_MODE: ${{ github.event.inputs.scope_mode }}
+          STRIX_INSTRUCTION: ${{ github.event.inputs.instruction }}
         run: |
           strix -n \
             -t ./ \
-            --scan-mode standard \
-            --scope-mode full
-
+            --scan-mode "$STRIX_SCAN_MODE" \
+            --scope-mode "$STRIX_SCOPE_MODE" \
+            --instruction "$STRIX_INSTRUCTION"
+            
   security-scan-snyk:
     name: 🔐 Security Scan Snyk
     runs-on: ubuntu-latest
