@@ -494,6 +494,17 @@
     //    - Group related updates
     // ================================================================
 
+    {
+      "description": "🛡️ Project-specific: ignore MAJOR updates for net.kyori:adventure-text-minimessage",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": [
+        "net.kyori:adventure-text-minimessage"
+      ],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+      // Allow patch/minor updates, but never propose major (v5+) because it
+      // raises Java baseline and this project only uses v4 via reflection.
+    }
   ],
 
   // ================================================================
