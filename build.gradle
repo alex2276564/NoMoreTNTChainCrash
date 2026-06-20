@@ -101,8 +101,8 @@ dependencies {
     // ----------------------------------------------------------------
     // 📚 Libraries (implementation - will be shaded into final JAR)
     // ----------------------------------------------------------------
-    // JSON serialization (required for legacy 1.16.x compatibility)
-    implementation 'com.google.code.gson:gson:2.14.0'
+    // JSON serialization
+    implementation 'com.alibaba.fastjson2:fastjson2:2.0.62'
 
     // Folia compatibility layer
     implementation 'com.tcoded:FoliaLib:0.5.2'
@@ -156,7 +156,7 @@ shadowJar {
     // ----------------------------------------------------------------
     // 📦 Library relocations (prevent conflicts)
     // ----------------------------------------------------------------
-    relocate 'com.google.gson', 'uz.alex2276564.nomoretntchaincrash.libs.gson'
+    relocate 'com.alibaba.fastjson2', 'uz.alex2276564.nomoretntchaincrash.libs.fastjson2'
     relocate 'com.tcoded.folialib', 'uz.alex2276564.nomoretntchaincrash.libs.folialib'
 }
 

@@ -1,48 +1,97 @@
 package uz.alex2276564.nomoretntchaincrash.utils;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 public class HttpUtils {
 
-    public record HttpResponse(int responseCode, JsonObject jsonBody) {
+    private static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+
+    private final HttpClient client;
+
+    public HttpUtils() {
+        this.client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
     }
 
-    /**
-     * Executes a GET request and returns an HttpResponse containing the response code and JSON body.
-     *
-     * @param urlString URL for the request.
-     * @param userAgent User-Agent for the header (you can pass null if not needed).
-     * @return HttpResponse containing the response code and JSON body.
-     * @throws Exception if the request fails.
-     */
-    public HttpResponse getResponse(String urlString, String userAgent) throws Exception {
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
+    public record HttpResponse(int statusCode, JSONObject jsonBody) {
+    }
+
+    public HttpResponse getJson(String urlString, String userAgent) throws IOException, InterruptedException {
+        return getJson(urlString, userAgent, DEFAULT_REQUEST_TIMEOUT);
+    }
+
+    public HttpResponse getJson(String urlString, String userAgent, Duration timeout)
+            throws IOException, InterruptedException {
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(urlString))
+                .timeout(timeout)
+                .GET()
+                .header("Accept", "application/json");
+
         if (userAgent != null) {
-            connection.setRequestProperty("User-Agent", userAgent);
+            builder.header("User-Agent", userAgent);
         }
 
-        try {
-            int responseCode = connection.getResponseCode();
-            InputStream in = responseCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
-            JsonObject jsonBody = null;
+        java.net.http.HttpResponse<String> httpResponse = client.send(
+                builder.build(),
+                java.net.http.HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+        );
 
-            if (in != null) {
-                try (InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-                    jsonBody = JsonParser.parseReader(reader).getAsJsonObject();
-                }
-            }
-            return new HttpResponse(responseCode, jsonBody);
-        } finally {
-            connection.disconnect();
+        JSONObject json = parseJsonQuietly(httpResponse.body());
+        return new HttpResponse(httpResponse.statusCode(), json);
+    }
+
+    public HttpResponse postJson(String urlString, JSONObject body, String userAgent)
+            throws IOException, InterruptedException {
+        return postJson(urlString, body, userAgent, DEFAULT_REQUEST_TIMEOUT);
+    }
+
+    public HttpResponse postJson(String urlString, JSONObject body, String userAgent, Duration timeout)
+            throws IOException, InterruptedException {
+
+        String payload = (body == null) ? "" : body.toJSONString();
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(urlString))
+                .timeout(timeout)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8));
+
+        if (userAgent != null) {
+            builder.header("User-Agent", userAgent);
+        }
+
+        java.net.http.HttpResponse<String> httpResponse = client.send(
+                builder.build(),
+                java.net.http.HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+        );
+
+        JSONObject json = parseJsonQuietly(httpResponse.body());
+        return new HttpResponse(httpResponse.statusCode(), json);
+    }
+
+    private JSONObject parseJsonQuietly(String body) {
+        if (body == null || body.isEmpty()) {
+            return new JSONObject();
+        }
+        try {
+            JSONObject obj = JSON.parseObject(body);
+            return (obj != null) ? obj : new JSONObject();
+        } catch (Exception ignored) {
+            return new JSONObject();
         }
     }
 }
