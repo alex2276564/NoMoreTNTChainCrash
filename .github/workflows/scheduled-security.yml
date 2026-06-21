@@ -92,13 +92,12 @@ on:
         default: 'standard'
 
       scope_mode:
-        description: 'Scope Mode (full: scan everything, diff: only changed files, auto: auto-detect in CI)'
+        description: 'Scope Mode (full: scan everything, diff: only changed files)'
         required: true
         type: choice
         options:
           - full
           - diff
-          - auto
         default: 'full'
 
       llm_timeout:
@@ -117,7 +116,7 @@ on:
         description: 'Custom AI Agent prompt / constraints'
         required: true
         type: string
-        default: 'AUTONOMY MODE: Dynamically analyze the repo structure and autonomously skip all non-production files, test suites, build artifacts, and package caches (like gradle, node_modules, build, target). Focus 100% of reasoning exclusively on core production source code and active endpoints.'
+        default: 'AUTONOMY MODE: Dynamically analyze the repo structure and autonomously skip all non-production files, test suites, build artifacts, and package caches (like gradle, node_modules, build, target). Focus 100% of reasoning exclusively on core production source code and active endpoints. RULES: Always check README.md and SECURITY.md first.'
 
 permissions:
   contents: read
@@ -276,7 +275,7 @@ jobs:
             --scan-mode "$STRIX_SCAN_MODE" \
             --scope-mode "$STRIX_SCOPE_MODE" \
             --instruction "$STRIX_INSTRUCTION"
-            
+
   security-scan-snyk:
     name: 🔐 Security Scan Snyk
     runs-on: ubuntu-latest

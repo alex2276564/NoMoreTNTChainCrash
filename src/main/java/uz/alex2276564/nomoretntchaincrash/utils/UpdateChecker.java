@@ -57,11 +57,6 @@ public class UpdateChecker {
                 throw new Exception("GitHub API response does not contain tag_name");
             }
 
-            if (SecurityUtils.containsSuspiciousPatterns(tagName)) {
-                plugin.getLogger().warning("Suspicious version tag detected from GitHub API, blocking update check");
-                return "blocked";
-            }
-
             return SecurityUtils.sanitize(tagName, SecurityUtils.SanitizeType.VERSION);
         } else {
             throw new Exception("GitHub API returned HTTP " + response.statusCode());
