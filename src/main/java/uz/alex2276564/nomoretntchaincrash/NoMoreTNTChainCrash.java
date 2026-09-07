@@ -19,11 +19,15 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
     @Getter
     private HttpUtils httpUtils;
 
+    @Getter
+    private UpdateChecker updateChecker;
+
     @Override
     public void onEnable() {
         try {
             setupRunner();
             setupHttpClient();
+            setupUpdateChecker();
             registerListeners();
             checkUpdates();
 
@@ -47,13 +51,25 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
         this.httpUtils = new HttpUtils();
     }
 
+    private void setupUpdateChecker() {
+        this.updateChecker = new UpdateChecker(
+                getDescription().getName(),
+                getDescription().getVersion(),
+                "alex2276564/NoMoreTNTChainCrash",
+                runner,
+                httpUtils,
+                getLogger()
+        );
+    }
+
     private void registerListeners() {
         Bukkit.getPluginManager().registerEvents(new EntityExplosionListener(), this);
     }
 
     private void checkUpdates() {
-        UpdateChecker updateChecker = new UpdateChecker(this, "alex2276564/NoMoreTNTChainCrash", runner, httpUtils);
-        updateChecker.checkForUpdates();
+        if (updateChecker != null) {
+            updateChecker.checkForUpdates();
+        }
     }
 
     @Override
