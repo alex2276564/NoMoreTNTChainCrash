@@ -79,6 +79,9 @@ be used to verify the integrity of the JAR.
 - Gradle dependencies
   - **Status:** **Locked**
   - **Details:** `dependencyLocking { lockAllConfigurations() }` is enabled, so all configurations are locked and upgrades are explicit.
+- Gradle wrapper distribution
+  - **Status:** **SHA-256 pinned**
+  - **Details:** The Gradle wrapper is configured with `distributionSha256Sum` and `validateDistributionUrl=true` in `gradle-wrapper.properties`, so the Gradle distribution ZIP specified in `distributionUrl` is verified against a known SHA-256 hash and must come from `services.gradle.org`.
 - GitHub Actions
   - **Status:** **Not SHA-pinned**
   - **Details:** Actions are referenced by version tags instead of commit SHAs; risk is mitigated by runtime monitoring via Harden Runner (see “CI hardening”).
