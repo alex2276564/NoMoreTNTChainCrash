@@ -1,6 +1,5 @@
 package uz.alex2276564.nomoretntchaincrash;
 
-import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import uz.alex2276564.nomoretntchaincrash.listeners.EntityExplosionListener;
@@ -13,14 +12,8 @@ import java.util.logging.Level;
 
 public final class NoMoreTNTChainCrash extends JavaPlugin {
 
-    @Getter
     private Runner runner;
-
-    @Getter
     private HttpUtils httpUtils;
-
-    @Getter
-    private UpdateChecker updateChecker;
 
     @Override
     public void onEnable() {
@@ -29,7 +22,6 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
             setupHttpClient();
             setupUpdateChecker();
             registerListeners();
-            checkUpdates();
 
             getLogger().info("NoMoreTNTChainCrash has been enabled successfully!");
         } catch (Exception e) {
@@ -52,7 +44,8 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
     }
 
     private void setupUpdateChecker() {
-        this.updateChecker = new UpdateChecker(
+        UpdateChecker updateChecker;
+        updateChecker = new UpdateChecker(
                 getDescription().getName(),
                 getDescription().getVersion(),
                 "alex2276564/NoMoreTNTChainCrash",
@@ -60,16 +53,11 @@ public final class NoMoreTNTChainCrash extends JavaPlugin {
                 httpUtils,
                 getLogger()
         );
+        updateChecker.checkForUpdates();
     }
 
     private void registerListeners() {
         Bukkit.getPluginManager().registerEvents(new EntityExplosionListener(), this);
-    }
-
-    private void checkUpdates() {
-        if (updateChecker != null) {
-            updateChecker.checkForUpdates();
-        }
     }
 
     @Override
