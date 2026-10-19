@@ -56,7 +56,13 @@ The built-in `HttpUtils` wrapper enforces:
 
 - **Timeouts**: Connection (5s), Request (10s).
 - **Response limits**: Hard cap of **256 KiB** to prevent DoS via large payloads.
-- **Safe JSON parsing**: Fails securely (empty `JSONObject` on errors).
+- **Typed error handling**: Each HTTP call returns a structured `HttpResponse`
+  that exposes an explicit `HttpErrorType` (`TIMEOUT`, `CONNECTION_FAILED`,
+  `RESPONSE_TOO_LARGE`, `INVALID_JSON`, etc.) instead of throwing checked
+  exceptions or silently returning an empty JSON object on failure.
+- **No implicit redirects**: `HttpUtils` never follows HTTP redirects
+  (`Redirect.NEVER`), so requests cannot be transparently redirected to
+  unexpected or untrusted endpoints.
 
 ---
 
@@ -83,21 +89,27 @@ be used to verify the integrity of the JAR.
   - **Status:** **SHA-256 pinned**
   - **Details:** The Gradle wrapper is configured with `distributionSha256Sum` and `validateDistributionUrl=true` in `gradle-wrapper.properties`, so the Gradle distribution ZIP specified in `distributionUrl` is verified against a known SHA-256 hash and must come from `services.gradle.org`.
 - GitHub Actions
-  - **Status:** **Not SHA-pinned**
-  - **Details:** Actions are referenced by version tags instead of commit SHAs; risk is mitigated by runtime monitoring via Harden Runner (see “CI hardening”).
+  - **Status:** **SHA-pinned via lockfile**
+  - **Details:** Workflow files reference actions by version tag (required for Renovate's `minimumReleaseAge` cooldown), but the commit actually executed on the runner is pinned via `.github/workflows/actions.lock`, maintained automatically by Renovate (`gh-actions-lock`).
 
 ---
 
 ## CI hardening
 
-All CI jobs are protected by StepSecurity Harden Runner, which monitors
-outbound network and process activity on the runner at runtime.
+### Protections
 
-Third-party Actions are referenced by tag rather than commit SHA.
-SHA pinning is intentionally not used — it only provides strong guarantees
-when combined with manual review of every upstream commit, which this
-single-developer project cannot sustain. Runtime monitoring via Harden Runner
-is the primary supply-chain control instead.
+- **StepSecurity Harden Runner** is enabled for all GitHub Actions workflows (except reusable workflows run in other repositories). It monitors outbound network and process activity on the runner at runtime and provides telemetry for suspicious behavior.
+- **Socket “sfw” firewall wrapper** is used around some high-risk tooling (e.g., package managers) to add an additional inspection layer for supply‑chain risks.
+- **StepSecurity hardened/drop-in Actions** (for example, replacements for popular third‑party Actions) are preferred where available, so that entire Actions are vetted and maintained by a security-focused vendor. However, these hardened variants may sometimes lag behind upstream releases, so regular upstream Actions are still used when the StepSecurity replacement is not yet updated.
+
+### Network egress policy
+
+Ideally, this project aims to enforce a strict egress policy using Harden Runner:
+
+- High‑risk jobs (write permissions, secrets, CD/publishing) should use `egress-policy: block` with an explicit `allowed-endpoints` allowlist to limit data exfiltration if an Action or dependency is compromised.
+- Low‑risk jobs (read‑only, no secrets) should use `egress-policy: audit`, because scanning and analysis tools may legitimately contact changing endpoints over time and hard blocking would add too much maintenance overhead.
+
+In practice, not all jobs currently run in `block` mode: most jobs use `egress-policy: audit` today, and block mode may be enabled selectively for the most sensitive workflows as maintenance capacity allows.
 
 ---
 
@@ -118,6 +130,20 @@ Dependencies are kept up to date using [Renovate](https://github.com/renovatebot
 - **Security-related updates:**
   - Processed **without artificial delay** — security patches are not held back by `minimumReleaseAge`.
   - Renovate security advisories and/or GitHub’s security alerts are handled as soon as possible once available.
+
+---
+
+## Repository hardening
+
+GitHub repository-level settings:
+
+- **Force-push protection:** **Enabled**.
+- **Secret Protection (push protection + secret scanning):** **Enabled**.
+- **Dependabot security alerts:** **Not enabled**.
+- **Immutable releases:** **Not enabled**.
+- **Branch protection rules:** **Not enabled**.
+- **Required signed commits/Required signed tags:** **Not enabled**.
+- **Mandatory PR review:** **Not enabled**.
 
 ---
 

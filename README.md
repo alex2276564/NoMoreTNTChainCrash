@@ -4,6 +4,7 @@
 [![Java Version](https://img.shields.io/badge/java-17+-orange)](https://adoptium.net/installation/linux/)
 [![GitHub Release](https://img.shields.io/github/v/release/alex2276564/NoMoreTNTChainCrash?color=blue)](https://github.com/alex2276564/NoMoreTNTChainCrash/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![SLSA 3](https://slsa.dev/images/gh-badge-level3.svg)](https://slsa.dev)
 
 **NoMoreTNTChainCrash** is a Minecraft plugin designed to prevent server crashes and lag caused by excessive TNT explosions. It achieves this by ignoring TNT before automated chain explosions can occur, while still allowing players to manually detonate TNT as desired.
 
