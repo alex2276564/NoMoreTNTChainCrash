@@ -528,8 +528,8 @@ jobs:
       security-scan-jactionlint,
       security-scan-supply-chain-guard,
       security-scan-gh-actions-lockfile,
+      dependency-review,
       secrets-scan-trufflehog,
-      dependency-review
     ]
     runs-on: ubuntu-24.04
 
