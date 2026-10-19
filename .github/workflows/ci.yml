@@ -358,6 +358,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
+    permissions:
+      contents: read
+      security-events: write
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2.22.1
@@ -375,6 +379,7 @@ jobs:
           profile: pedantic
           online: strict
           strict-exit: true
+          advanced-security: true
 
   security-scan-supply-chain-guard:
     name: 🔐 Security Scan supply-chain-guard
