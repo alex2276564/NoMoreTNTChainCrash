@@ -293,14 +293,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install Trivy
+        uses: step-security/setup-trivy@v0.3.1
+        with:
+          cache: true
+
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: step-security/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
           exit-code: '1'
+          skip-setup-trivy: true
 
       - name: Run Trivy (console report)
         if: ${{ failure() }}
